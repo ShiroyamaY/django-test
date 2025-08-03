@@ -1,6 +1,7 @@
-from django.db import models
-from tms.tasks.models.tasks import Task
 from django.contrib.auth.models import User
+from django.db import models
+
+from apps.tasks.models.tasks import Task
 
 
 class Comment(models.Model):

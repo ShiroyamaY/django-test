@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "drf_spectacular",
-    "tms.tasks",
+    "apps.tasks",
     "django_filters",
 ]
 
@@ -90,7 +90,7 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "NAME": ("django.contrib.auth.password_validation.UserAttributeSimilarityValidator"),
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",

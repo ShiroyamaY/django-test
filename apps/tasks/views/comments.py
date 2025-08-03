@@ -3,12 +3,12 @@ from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
-from tms.tasks.models.comments import Comment
-from tms.tasks.serializers.comments import (
+from apps.tasks.models.comments import Comment
+from apps.tasks.serializers.comments import (
     CommentCreateSerializer,
     CommentRetrieveSerializer,
 )
-from tms.tasks.services.email_service import EmailService
+from apps.tasks.services.email_service import EmailService
 
 
 class CommentView(ListModelMixin, CreateModelMixin, GenericViewSet):

@@ -1,8 +1,8 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from tms.tasks.views.comments import CommentView
-from tms.tasks.views.tasks import TaskView
+from apps.tasks.views.comments import CommentView
+from apps.tasks.views.tasks import TaskView
 
 router = DefaultRouter()
 

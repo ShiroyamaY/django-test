@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from tms.tasks.models.comments import Comment
+from apps.tasks.models.comments import Comment
 
 
 class CommentRetrieveSerializer(serializers.ModelSerializer):

@@ -7,7 +7,7 @@ from django.urls import path
 from rest_framework.reverse import reverse
 from rest_framework.test import APIClient
 
-from tms.common.middlewares import ApiMiddleware
+from apps.common.middlewares import ApiMiddleware
 
 
 class TestCommon(TestCase):
@@ -65,6 +65,4 @@ class ApiMiddlewareExceptionTestCase(TestCase):
         self.assertIn("exception", content)
         self.assertIn("detail", content)
         self.assertEqual(content["exception"], "Test exception")
-        self.assertEqual(
-            content["detail"], "Something Went Wrong. Please contact support"
-        )
+        self.assertEqual(content["detail"], "Something Went Wrong. Please contact support")

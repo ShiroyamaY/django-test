@@ -35,5 +35,8 @@ select = [
     "UP",
 ]
 
+[tool.ruff]
+line-length = 120
+
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F403"]

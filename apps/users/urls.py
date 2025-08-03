@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from tms.users.views import RegisterUserView, UserListView
+from apps.users.views import RegisterUserView, UserListView
 
 urlpatterns = [
     path("register", RegisterUserView.as_view(), name="token_register"),

@@ -1,17 +1,17 @@
+import logging
 from smtplib import SMTPException
 
 from django.contrib.auth.models import User
 from django.core.mail import EmailMultiAlternatives
-from django.template import TemplateSyntaxError, TemplateDoesNotExist
+from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
+from apps.tasks.models.comments import Comment
+from apps.tasks.models.tasks import Task
 from config import settings
-from tms.tasks.models.comments import Comment
-from tms.tasks.models.tasks import Task
-import logging
 
-logger = logging.getLogger("tms.tasks")
+logger = logging.getLogger("apps.tasks")
 
 
 class EmailService:
@@ -54,14 +54,9 @@ class EmailService:
                 "user": task.assignee,
             }
 
-            return cls.send_mail(
-                subject, "emails/task_assigned.html", [task.assignee.email], context
-            )
+            return cls.send_mail(subject, "emails/task_assigned.html", [task.assignee.email], context)
         except ValueError as error:
             logger.error(f"Email Service: Validation error: {error}")
-            return False
-        except Exception as error:
-            logger.error(f"Email Service: Unknown error: {error}")
             return False
 
     @classmethod
@@ -79,9 +74,6 @@ class EmailService:
             return cls.send_mail(subject, "emails/task_completed.html", emails, context)
         except ValueError as error:
             logger.error(f"Email Service: Validation error: {error}")
-            return False
-        except Exception as error:
-            logger.error(f"Email Service: Unknown error: {error}")
             return False
 
     @classmethod
@@ -105,12 +97,7 @@ class EmailService:
                 "comment": comment,
             }
 
-            return cls.send_mail(
-                subject, "emails/task_commented.html", [task.assignee.email], context
-            )
+            return cls.send_mail(subject, "emails/task_commented.html", [task.assignee.email], context)
         except ValueError as error:
             logger.error(f"Email Service: Validation error: {error}")
-            return False
-        except Exception as error:
-            logger.error(f"Email Service: Unknown error: {error}")
             return False

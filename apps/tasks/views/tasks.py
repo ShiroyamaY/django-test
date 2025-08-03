@@ -6,14 +6,14 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from tms.tasks.models.tasks import Task
-from tms.tasks.serializers.tasks import (
+from apps.tasks.models.tasks import Task
+from apps.tasks.serializers.tasks import (
     TaskAssignUserSerializer,
     TaskCreateSerializer,
     TaskRetrieveSerializer,
     TaskUpdateSerializer,
 )
-from tms.tasks.services.email_service import EmailService
+from apps.tasks.services.email_service import EmailService
 
 
 class TaskView(ModelViewSet):
@@ -49,9 +49,7 @@ class TaskView(ModelViewSet):
         task: Task = self.get_object()
 
         if task.status == Task.Status.COMPLETED:
-            return Response(
-                "Task already completed.", status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response("Task already completed.", status=status.HTTP_400_BAD_REQUEST)
 
         task.status = task.Status.COMPLETED
         task.save()

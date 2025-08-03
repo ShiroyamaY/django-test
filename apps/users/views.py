@@ -5,8 +5,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from tms.common.permissions import ReadOnly
-from tms.users.serializers import UserSerializer, UserListSerializer
+from apps.common.permissions import ReadOnly
+from apps.users.serializers import UserListSerializer, UserSerializer
 
 
 class RegisterUserView(GenericAPIView):

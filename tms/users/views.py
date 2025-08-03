@@ -1,10 +1,12 @@
 from django.contrib.auth.models import User
+from rest_framework import generics
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from tms.users.serializers import UserSerializer
+from tms.common.permissions import ReadOnly
+from tms.users.serializers import UserSerializer, UserListSerializer
 
 
 class RegisterUserView(GenericAPIView):
@@ -19,3 +21,9 @@ class RegisterUserView(GenericAPIView):
 
         user = User.objects.create_user(**validated_data)
         return Response(self.serializer_class(user).data)
+
+
+class UserListView(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserListSerializer
+    permission_classes = (ReadOnly,)

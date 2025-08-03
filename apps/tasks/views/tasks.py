@@ -62,7 +62,7 @@ class TaskView(ModelViewSet):
         return Response(self.get_serializer(task).data, status=status.HTTP_200_OK)
 
     @extend_schema(responses=TaskUpdateSerializer)
-    @action(detail=True, methods=["patch"], url_path="assign_user")
+    @action(detail=True, methods=["patch"], url_path="assign-user")
     def assign_user(self, request, pk=None):
         task = self.get_object()
 

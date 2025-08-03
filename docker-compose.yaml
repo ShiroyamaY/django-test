@@ -1,0 +1,36 @@
+services:
+  caddy:
+    image: lucaslorentz/caddy-docker-proxy:ci-alpine
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "8443:8443"
+    networks:
+      - caddy
+    labels:
+      caddy.https_port: 8443
+    environment:
+      - CADDY_INGRESS_NETWORKS=caddy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - caddy_data:/data
+    restart: unless-stopped
+  email:
+      image: rnwood/smtp4dev
+      init: true
+      restart: on-failure
+      volumes:
+        - smtp_data:/smtp4dev
+      networks:
+        - caddy
+      ports:
+        - "25:25"
+      labels:
+        caddy: email.lvh.me
+        caddy.tls: internal
+        caddy.reverse_proxy: "email:80"
+volumes:
+  smtp_data: {}
+  caddy_data: {}
+networks:
+  caddy: {}

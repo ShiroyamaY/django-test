@@ -30,6 +30,7 @@ urlpatterns = [
         include(
             [
                 path("users/", include("tms.users.urls")),
+                path("tasks/", include("tms.tasks.urls")),
                 path("schema/", SpectacularAPIView.as_view(), name="schema"),
                 path(
                     "docs/",

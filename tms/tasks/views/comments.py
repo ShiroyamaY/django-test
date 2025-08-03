@@ -1,11 +1,13 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters
-from rest_framework.mixins import ListModelMixin, CreateModelMixin
+from rest_framework.mixins import CreateModelMixin, ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
 from tms.tasks.models.comments import Comment
-from tms.tasks.serializers import CommentCreateSerializer, CommentRetrieveSerializer
+from tms.tasks.serializers.comments import (
+    CommentCreateSerializer,
+    CommentRetrieveSerializer,
+)
 from tms.tasks.services.email_service import EmailService
 
 
@@ -17,7 +19,6 @@ class CommentView(ListModelMixin, CreateModelMixin, GenericViewSet):
     serializer_class = CommentRetrieveSerializer
     multi_serializer_class = {
         "create": CommentCreateSerializer,
-        "retrieve": CommentRetrieveSerializer,
     }
 
     def get_serializer_class(self):

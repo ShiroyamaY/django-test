@@ -1,10 +1,11 @@
 from rest_framework import serializers
 
-from .comments import CommentRetrieveSerializer
 from tms.tasks.models.tasks import Task
 
+from .comments import CommentRetrieveSerializer
 
-class TaskSerializer(serializers.ModelSerializer):
+
+class TaskRetrieveSerializer(serializers.ModelSerializer):
     comments = CommentRetrieveSerializer(many=True, read_only=True)
 
     class Meta:
@@ -16,3 +17,15 @@ class TaskCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ("title", "description", "status")
+
+
+class TaskUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ("id", "title", "description", "status", "assignee")
+
+
+class TaskAssignUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ("assignee",)

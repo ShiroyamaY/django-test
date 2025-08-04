@@ -1,3 +1,4 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import filters, status
 from rest_framework.decorators import action
@@ -29,8 +30,9 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
         "complete": TaskUpdateSerializer,
         "list": TaskListSerializer,
     }
-    filter_backends = [filters.SearchFilter]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ["title"]
+    filterset_fields = ["assignee", "status"]
 
     def get_queryset(self):
         if self.action in ["retrieve", "list"]:

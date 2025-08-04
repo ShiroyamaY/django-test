@@ -30,7 +30,7 @@ class TaskRetrieveSerializer(serializers.ModelSerializer):
 class TaskCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = ("title", "description", "status")
+        fields = ("id", "title", "description", "status")
 
 
 class TaskUpdateSerializer(serializers.ModelSerializer):
@@ -51,7 +51,6 @@ class TaskCompleteSerializer(serializers.ModelSerializer):
 
 
 class TaskAssignUserSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)
     title = serializers.CharField(read_only=True)
 
     class Meta:
@@ -75,8 +74,6 @@ class TaskListSerializer(serializers.ModelSerializer):
 
 
 class TopTaskSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)
-    title = serializers.CharField(read_only=True)
     total_minutes = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -85,7 +82,7 @@ class TopTaskSerializer(serializers.ModelSerializer):
 
 
 class TimeLogStartSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault(), write_only=True)
 
     class Meta:
         model = TimeLog
@@ -93,19 +90,11 @@ class TimeLogStartSerializer(serializers.ModelSerializer):
             "id",
             "task",
             "start_time",
+            "user",
         )
-
-    def create(self, validated_data):
-        user = self.context["request"].user
-        validated_data["user"] = user
-
-        TimeLog.objects.filter(end_time=None).update(end_time=validated_data["start_time"])
-
-        return super().create(validated_data)
 
 
 class TimeLogStopSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)
     duration_minutes = serializers.SerializerMethodField()
     end_time = serializers.DateTimeField(write_only=True)
 
@@ -150,16 +139,8 @@ class TimeLogSerializer(serializers.ModelSerializer):
 
 class TimeLogSpecificDateSerializer(serializers.ModelSerializer):
     duration_minutes = serializers.IntegerField(min_value=1)
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault(), write_only=True)
 
     class Meta:
         model = TimeLog
-        fields = (
-            "task",
-            "date",
-            "duration_minutes",
-        )
-
-    def create(self, validated_data: dict):
-        user = self.context["request"].user
-        validated_data["user"] = user
-        return super().create(validated_data)
+        fields = ("task", "date", "duration_minutes", "user")

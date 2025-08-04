@@ -11,6 +11,7 @@ from apps.tasks.models.tasks import Task
 from apps.tasks.serializers.tasks import (
     TaskAssignUserSerializer,
     TaskCreateSerializer,
+    TaskListSerializer,
     TaskRetrieveSerializer,
     TaskUpdateSerializer,
 )
@@ -26,6 +27,7 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
         "assign_user": TaskAssignUserSerializer,
         "update": TaskUpdateSerializer,
         "complete": TaskUpdateSerializer,
+        "list": TaskListSerializer,
     }
     filter_backends = [filters.SearchFilter]
     search_fields = ["title"]

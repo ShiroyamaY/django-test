@@ -25,6 +25,17 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
         fields = ("id", "title", "description", "status", "assignee")
 
 
+class TaskCompleteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ("id", "status")
+
+    def validate(self, attrs):
+        if self.instance.status == Task.Status.COMPLETED:
+            raise serializers.ValidationError("Task already completed.")
+        return attrs
+
+
 class TaskAssignUserSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)
     title = serializers.CharField(read_only=True)
@@ -50,7 +61,9 @@ class TaskListSerializer(serializers.ModelSerializer):
 
 
 class TopTaskSerializer(serializers.ModelSerializer):
-    total_minutes = serializers.IntegerField()
+    id = serializers.IntegerField(read_only=True)
+    title = serializers.CharField(read_only=True)
+    total_minutes = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Task

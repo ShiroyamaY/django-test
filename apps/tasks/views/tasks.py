@@ -12,6 +12,7 @@ from apps.common.views import MultiSerializerMixin
 from apps.tasks.models.tasks import Task
 from apps.tasks.serializers.tasks import (
     TaskAssignUserSerializer,
+    TaskCompleteSerializer,
     TaskCreateSerializer,
     TaskListSerializer,
     TaskRetrieveSerializer,
@@ -30,7 +31,7 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
         "create": TaskCreateSerializer,
         "assign_user": TaskAssignUserSerializer,
         "update": TaskUpdateSerializer,
-        "complete": TaskUpdateSerializer,
+        "complete": TaskCompleteSerializer,
         "list": TaskListSerializer,
         "top_logged_tasks_last_month": TopTaskSerializer,
     }
@@ -53,28 +54,29 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
     @action(detail=True, methods=["patch"])
     def complete(self, request: Request, pk: int) -> Response:
         task: Task = self.get_object()
-
-        if task.status == Task.Status.COMPLETED:
-            return Response("Task already completed.", status=status.HTTP_400_BAD_REQUEST)
-        task.status = task.Status.COMPLETED
-        task.save()
+        serializer: TaskCompleteSerializer = self.get_serializer(
+            task, data={"status": Task.Status.COMPLETED}, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        task = serializer.save()
 
         send_to = {comment.author for comment in task.comments.all()}
         send_to.add(task.assignee)
+
         EmailService.send_task_completed_notification(task, send_to)
 
-        return Response(self.get_serializer(task).data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["patch"], url_path="assign-user")
     def assign_user(self, request, pk=None):
         task = self.get_object()
         serializer = self.get_serializer(task, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        task = serializer.save()
 
         EmailService.send_task_assigned_notification(task)
 
-        return Response(self.get_serializer(task).data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=["get"], url_path="top-logged-tasks-last-month")
     def top_logged_tasks_last_month(self, request: Request, pk=None):

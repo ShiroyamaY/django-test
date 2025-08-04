@@ -40,6 +40,9 @@ class EmailService:
         except SMTPException as error:
             logger.error(f"Email Service: SMTP error occurred: {error}")
             return False
+        except ConnectionRefusedError as error:
+            logger.error(f"Email Service: Connection refused error: {error}")
+            return False
 
     @classmethod
     def send_task_assigned_notification(cls, task: Task):

@@ -1,11 +1,16 @@
 from django.contrib.auth.models import User
-from rest_framework import generics
+from django.db.models import QuerySet
+from django.db.models.aggregates import Sum
+from django.db.models.query_utils import Q
+from rest_framework import generics, status
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.common.helpers import get_previous_month_range_utc
 from apps.common.permissions import ReadOnly
 from apps.users.serializers import UserListSerializer, UserSerializer
 
@@ -36,3 +41,21 @@ class UserListView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserListSerializer
     permission_classes = (ReadOnly,)
+
+
+class UserMonthlyLoggedTimeView(APIView):
+    def get(self, request: Request) -> Response:
+        start_of_last_month, end_of_last_month = get_previous_month_range_utc()
+        time_logs: QuerySet = request.user.time_logs.filter(
+            Q(
+                start_time__gte=start_of_last_month,
+                end_time__lte=end_of_last_month,
+            )
+            | Q(
+                date__gte=start_of_last_month,
+                date__lte=end_of_last_month,
+            )
+        )
+        total_minutes = time_logs.aggregate(total_minutes=Sum("duration_minutes"))["total_minutes"] or 0
+
+        return Response({"total_minutes": total_minutes}, status.HTTP_200_OK)

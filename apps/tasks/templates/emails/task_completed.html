@@ -1,0 +1,17 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}Task Completed{% endblock %}
+
+{% block header %}Task Completed{% endblock %}
+
+{% block content %}
+    <h2>Hello, {{ user.username }}!</h2>
+
+    <p>The task <strong>{{ task.title }}</strong> has been marked as completed.</p>
+
+    {% if completed_by %}
+        <p><strong>Completed by:</strong> {{ completed_by.username }}</p>
+    {% endif %}
+
+    <p>You can view the task for more details.</p>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}You have been assigned a task{% endblock %}
+
+{% block header %}New Assignment{% endblock %}
+
+{% block content %}
+    <h2>Hello, {{ user.username }}!</h2>
+
+    <p>You have been assigned a new task.</p>
+
+    <div class="task-details">
+        <h3>Task Details:</h3>
+        <p><strong>Title:</strong> {{ task.title }}</p>
+        <p><strong>Description:</strong> {{ task.description }}</p>
+        <p><strong>Assigned to:</strong> {{ task.assignee }}</p>
+    </div>
+    <p>Please review the task and begin working on it.</p>
+{% endblock %}

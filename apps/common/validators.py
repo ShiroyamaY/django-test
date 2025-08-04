@@ -11,7 +11,7 @@ class CustomNumericValidator:
     Validate that the input is a valid numeric value.
 
     Usage example:
-    from tms.common.validators import CustomNumericValidator
+    from apps.common.validators import CustomNumericValidator
     from django.db import models
 
     class MyModel(models.Model):

@@ -1,4 +1,6 @@
 from django.db.models import QuerySet
+from django.db.models.aggregates import Sum
+from django.db.models.query_utils import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.utils import extend_schema
 from rest_framework import filters, status
@@ -8,9 +10,10 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
+from apps.common.helpers import get_previous_month_range_utc
 from apps.common.views import MultiSerializerMixin
-from apps.tasks.models.tasks import Task
-from apps.tasks.serializers.tasks import (
+from apps.tasks.models import Task
+from apps.tasks.serializers import (
     TaskAssignUserSerializer,
     TaskCompleteSerializer,
     TaskCreateSerializer,
@@ -20,7 +23,6 @@ from apps.tasks.serializers.tasks import (
     TopTaskSerializer,
 )
 from apps.tasks.services.email_service import EmailService
-from apps.tasks.services.task_service import TaskService
 
 
 class TaskView(MultiSerializerMixin, ModelViewSet):
@@ -40,8 +42,21 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
     filterset_fields = ["assignee", "status"]
 
     def get_queryset(self):
+        if self.action == "top_logged_tasks_last_month":
+            start, end = get_previous_month_range_utc()
+            return (
+                Task.objects.filter(
+                    Q(time_logs__start_time__gte=start, time_logs__end_time__lte=end)
+                    | Q(time_logs__date__gte=start, time_logs__date__lte=end)
+                )
+                .annotate(total_minutes=Sum("time_logs__duration_minutes"))
+                .filter(total_minutes__gt=0)
+                .order_by("-total_minutes")
+                .only("id", "title")[:20]
+            )
         if self.action == "retrieve":
             return Task.objects.prefetch_related("comments")
+
         return Task.objects.all()
 
     def perform_create(self, serializer: TaskCreateSerializer):
@@ -80,6 +95,6 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="top-logged-tasks-last-month")
     def top_logged_tasks_last_month(self, request: Request, pk=None):
-        top_tasks: QuerySet = TaskService.get_top_logged_tasks_last_month(20)
+        top_tasks: QuerySet = self.get_queryset()
 
         return Response(self.get_serializer(top_tasks, many=True).data, status=status.HTTP_200_OK)

@@ -4,14 +4,13 @@ from django.db.models.aggregates import Sum
 from django.db.models.query_utils import Q
 from rest_framework import generics, status
 from rest_framework.generics import GenericAPIView
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.common.helpers import get_previous_month_range_utc
-from apps.common.permissions import ReadOnly
 from apps.users.serializers import UserListSerializer, UserSerializer
 
 
@@ -40,7 +39,7 @@ class RegisterUserView(GenericAPIView):
 class UserListView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserListSerializer
-    permission_classes = (ReadOnly,)
+    permission_classes = (IsAuthenticated,)
 
 
 class UserMonthlyLoggedTimeView(APIView):

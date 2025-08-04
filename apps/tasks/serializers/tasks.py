@@ -26,9 +26,16 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
 
 
 class TaskAssignUserSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    title = serializers.CharField(read_only=True)
+
     class Meta:
         model = Task
-        fields = ("assignee",)
+        fields = (
+            "id",
+            "title",
+            "assignee",
+        )
 
 
 class TaskListSerializer(serializers.ModelSerializer):
@@ -40,3 +47,11 @@ class TaskListSerializer(serializers.ModelSerializer):
 
     def get_total_logged_minutes(self, obj) -> int:
         return obj.time_logs.aggregate(total=Sum("duration_minutes"))["total"] or 0
+
+
+class TopTaskSerializer(serializers.ModelSerializer):
+    total_minutes = serializers.IntegerField()
+
+    class Meta:
+        model = Task
+        fields = ["id", "title", "total_minutes"]

@@ -1,9 +1,25 @@
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from django.core.validators import RegexValidator
 from rest_framework import serializers
 
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(
+        write_only=True,
+        min_length=8,
+        validators=[validate_password],
+    )
+
+    email = serializers.EmailField()
+    username = serializers.CharField(
+        min_length=4,
+        validators=[
+            RegexValidator(
+                regex=r"^[\w.@+-]+$", message="Username may contain only letters, digits and @/./+/-/_ characters."
+            )
+        ],
+    )
 
     class Meta:
         model = User
@@ -14,6 +30,16 @@ class UserSerializer(serializers.ModelSerializer):
             "username",
             "password",
         )
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("This email is already in use.")
+        return value
+
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("This username is already taken.")
+        return value
 
 
 class UserListSerializer(serializers.ModelSerializer):

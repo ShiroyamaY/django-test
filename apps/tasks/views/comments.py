@@ -4,8 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 
 from apps.common.views import MultiSerializerMixin
-from apps.tasks.models.comments import Comment
-from apps.tasks.serializers.comments import (
+from apps.tasks.models import Comment
+from apps.tasks.serializers import (
     CommentCreateSerializer,
     CommentRetrieveSerializer,
 )

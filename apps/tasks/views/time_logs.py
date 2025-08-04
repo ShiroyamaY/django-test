@@ -8,8 +8,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from apps.common.views import MultiSerializerMixin
-from apps.tasks.models.time_logs import TimeLog
-from apps.tasks.serializers.time_logs import (
+from apps.tasks.models import TimeLog
+from apps.tasks.serializers import (
     TimeLogSerializer,
     TimeLogSpecificDateSerializer,
     TimeLogStartSerializer,

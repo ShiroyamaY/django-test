@@ -3,12 +3,11 @@ from smtplib import SMTPException
 
 from django.contrib.auth.models import User
 from django.core.mail import EmailMultiAlternatives
-from django.template import TemplateDoesNotExist, TemplateSyntaxError
+from django.template.exceptions import TemplateDoesNotExist, TemplateSyntaxError
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
-from apps.tasks.models.comments import Comment
-from apps.tasks.models.tasks import Task
+from apps.tasks.models import Comment, Task
 from config import settings
 
 logger = logging.getLogger("apps.tasks")

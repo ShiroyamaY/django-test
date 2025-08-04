@@ -1,3 +1,4 @@
+from rest_framework import serializers
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
@@ -22,3 +23,12 @@ class ProtectedTestView(GenericAPIView):
     @staticmethod
     def get(request: Request) -> Response:
         return Response({"live": True})
+
+
+class MultiSerializerMixin:
+    multi_serializer_class: dict[str, type[serializers.Serializer]] | None = None
+
+    def get_serializer_class(self):
+        if self.multi_serializer_class and self.action in self.multi_serializer_class:
+            return self.multi_serializer_class[self.action]
+        return self.serializer_class

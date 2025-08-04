@@ -6,6 +6,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
+from apps.common.views import MultiSerializerMixin
 from apps.tasks.models.tasks import Task
 from apps.tasks.serializers.tasks import (
     TaskAssignUserSerializer,
@@ -16,7 +17,7 @@ from apps.tasks.serializers.tasks import (
 from apps.tasks.services.email_service import EmailService
 
 
-class TaskView(ModelViewSet):
+class TaskView(MultiSerializerMixin, ModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskRetrieveSerializer
     permission_classes = [IsAuthenticated]
@@ -28,9 +29,6 @@ class TaskView(ModelViewSet):
     }
     filter_backends = [filters.SearchFilter]
     search_fields = ["title"]
-
-    def get_serializer_class(self):
-        return self.multi_serializer_class.get(self.action) or self.serializer_class
 
     def get_queryset(self):
         if self.action in ["retrieve", "list"]:

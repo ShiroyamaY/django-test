@@ -1,5 +1,6 @@
 .idea
 db.sqlite3
+.env
 
 # Unit test / coverage reports
 htmlcov/

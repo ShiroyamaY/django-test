@@ -43,6 +43,8 @@ class UserListView(generics.ListAPIView):
 
 
 class UserMonthlyLoggedTimeView(APIView):
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request: Request) -> Response:
         start_of_last_month, end_of_last_month = get_previous_month_range_utc()
         time_logs: QuerySet = request.user.time_logs.filter(

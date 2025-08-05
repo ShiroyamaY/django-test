@@ -1,5 +1,4 @@
 import logging
-from smtplib import SMTPException
 
 from django.contrib.auth.models import User
 from django.core.mail import EmailMultiAlternatives
@@ -36,11 +35,8 @@ class EmailService:
         except TemplateSyntaxError as error:
             logger.error(f"Email Service: Template syntax error: {error}")
             return False
-        except SMTPException as error:
-            logger.error(f"Email Service: SMTP error occurred: {error}")
-            return False
-        except ConnectionRefusedError as error:
-            logger.error(f"Email Service: Connection refused error: {error}")
+        except ConnectionError as error:
+            logger.error(f"Email Service: Connection error: {error}")
             return False
 
     @classmethod
@@ -64,7 +60,7 @@ class EmailService:
     @classmethod
     def send_task_completed_notification(cls, task: Task, recipients: set[User]):
         try:
-            emails = [user.email for user in recipients]
+            emails = [user.email for user in recipients if user.email and user.email.strip()]
             if not emails:
                 raise ValueError("No valid emails in recipients list.")
 

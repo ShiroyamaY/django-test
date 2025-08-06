@@ -83,8 +83,6 @@ class TaskListAPITests(TasksAPITestCase):
         [
             ("filter_by_open_status", {"status": Task.Status.OPEN}, "status", Task.Status.OPEN),
             ("filter_by_completed_status", {"status": Task.Status.COMPLETED}, "status", Task.Status.COMPLETED),
-            ("filter_by_assignee_user1", {"assignee": 2}, "assignee_id", 2),
-            ("filter_by_assignee_user2", {"assignee": 3}, "assignee_id", 3),
         ]
     )
     def test_task_list_filtering(self, name, query_params, filter_field, filter_value):

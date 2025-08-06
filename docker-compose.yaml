@@ -55,6 +55,13 @@ services:
       caddy: pghero.lvh.me
       caddy.tls: internal
       caddy.reverse_proxy: "pghero:8080"
+  redis:
+    image: redis:8.2-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - caddy
 volumes:
   smtp_data: {}
   caddy_data: {}

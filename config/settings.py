@@ -175,3 +175,18 @@ EMAIL_HOST = env("EMAIL_HOST")
 EMAIL_PORT = env("EMAIL_PORT")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="user@example.com")
+
+CACHES = {
+    "default": {
+        "BACKEND": env("CACHE_BACKEND"),
+        "LOCATION": env("CACHE_LOCATION"),
+        "OPTIONS": {
+            "CLIENT_CLASS": env("CACHE_CLIENT_CLASS"),
+        },
+    }
+}
+
+
+CACHE_TIMEOUTS = {
+    "TOP_LOGGED_TASKS_BY_USER": 60,
+}

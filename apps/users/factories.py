@@ -1,14 +1,16 @@
 import factory
 from django.contrib.auth.models import User
-from factory.django import DjangoModelFactory
+from faker import Faker
+
+fake = Faker()
 
 
-class UserFactory(DjangoModelFactory):
+class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = User
 
-    username = factory.Sequence(lambda n: f"user{n}")
+    username = factory.LazyAttribute(lambda _: fake.unique.user_name())
+    email = factory.LazyAttribute(lambda _: fake.unique.email())
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
-    email = factory.LazyAttribute(lambda o: f"{o.username}@example.com")
     password = factory.PostGenerationMethodCall("set_password", "password123")

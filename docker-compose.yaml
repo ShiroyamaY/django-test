@@ -42,6 +42,11 @@ services:
       - "${DB_PORT:-5432}:5432"
     networks:
       - caddy
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
   pghero:
     image: ankane/pghero
     restart: unless-stopped
@@ -62,6 +67,57 @@ services:
       - "6379:6379"
     networks:
       - caddy
+  tms:
+    extends:
+      file: base.yaml
+      service: tms
+    build:
+      context: .
+    container_name: tms-container
+    depends_on:
+      tms-migrations:
+        condition: service_completed_successfully
+    labels:
+      caddy: tms.lvh.me
+      caddy.tls: internal
+      caddy.reverse_proxy: "tms:8000"
+    networks:
+      - caddy
+    develop:
+      watch:
+        - action: sync+restart
+          path: .
+          target: /tms
+          ignore:
+            - Dockerfile
+            - docker-compose.yaml
+            - .dockerignore
+            - uv.lock
+            - pyproject.toml
+            - .venv/
+            - "**/tests.py"
+            - "**/migrations"
+            - "**/static"
+        - action: rebuild
+          path: Dockerfile
+        - action: rebuild
+          path: .dockerignore
+        - action: rebuild
+          path: uv.lock
+  tms-migrations:
+    extends:
+      file: base.yaml
+      service: tms-base
+    container_name: tms-migrations
+    entrypoint: [ "python", "manage.py", "migrate" ]
+    develop:
+      watch:
+        - action: sync+restart
+          path: tasks/migrations
+          target: /tms/tasks/migrations
+        - action: sync+restart
+          path: users/migrations
+          target: /tms/users/migrations
 volumes:
   smtp_data: {}
   caddy_data: {}

@@ -42,6 +42,19 @@ services:
       - "${DB_PORT:-5432}:5432"
     networks:
       - caddy
+  pghero:
+    image: ankane/pghero
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      - PGHERO_USERNAME
+      - PGHERO_PASSWORD
+    networks:
+      - caddy
+    labels:
+      caddy: pghero.lvh.me
+      caddy.tls: internal
+      caddy.reverse_proxy: "pghero:8080"
 volumes:
   smtp_data: {}
   caddy_data: {}

@@ -1,7 +1,7 @@
 from django.db.models.aggregates import Sum
 from rest_framework import serializers
 
-from apps.tasks.models import Comment, Task, TimeLog
+from apps.tasks.models import Attachment, Comment, Task, TimeLog
 
 
 class CommentRetrieveSerializer(serializers.ModelSerializer):
@@ -145,3 +145,17 @@ class TimeLogSpecificDateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimeLog
         fields = ("task", "date", "duration_minutes", "user")
+
+
+class AttachmentCreateSerializer(serializers.ModelSerializer):
+    file = serializers.FileField()
+
+    class Meta:
+        model = Attachment
+        fields = "__all__"
+
+
+class AttachmentListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Attachment
+        fields = "__all__"

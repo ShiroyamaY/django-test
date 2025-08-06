@@ -2,8 +2,11 @@ from datetime import datetime
 
 from django.contrib.auth.models import User
 from django.db import models
+from django_minio_backend import iso_date_prefix
 
 from apps.common.models import TimeStampMixin
+from apps.common.storage import PublicMinioBackend
+from config.settings import MINIO_PUBLIC_BUCKETS
 
 
 class Task(TimeStampMixin, models.Model):
@@ -60,3 +63,12 @@ class TimeLog(TimeStampMixin, models.Model):
             delta = self.end_time - self.start_time
             return int(delta.total_seconds() // 60)
         return self.duration_minutes
+
+
+class Attachment(TimeStampMixin, models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="attachments")
+    file = models.FileField(
+        verbose_name="Object Upload",
+        storage=PublicMinioBackend(bucket_name=MINIO_PUBLIC_BUCKETS[0]),
+        upload_to=iso_date_prefix,
+    )

@@ -67,6 +67,25 @@ services:
       - "6379:6379"
     networks:
       - caddy
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    volumes:
+      - minio_data:/data
+    networks:
+      - caddy
+    labels:
+      caddy_1: minio.lvh.me
+      caddy_1.tls: internal
+      caddy_1.reverse_proxy: "minio:9000"
+      caddy_2: web.minio.lvh.me
+      caddy_2.tls: internal
+      caddy_2.reverse_proxy: "minio:9001"
   tms:
     extends:
       file: base.yaml
@@ -107,5 +126,6 @@ volumes:
   smtp_data: {}
   caddy_data: {}
   postgres_data: {}
+  minio_data: {}
 networks:
   caddy: {}

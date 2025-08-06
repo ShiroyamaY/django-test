@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "apps.tasks",
     "django_filters",
+    "django_minio_backend",
 ]
 
 MIDDLEWARE = [
@@ -170,6 +171,7 @@ SPECTACULAR_SETTINGS = {
             },
         },
     },
+    "COMPONENT_SPLIT_REQUEST": True,
 }
 
 EMAIL_BACKEND = env("EMAIL_BACKEND")
@@ -188,6 +190,7 @@ CACHES = {
     }
 }
 
+
 CACHE_TIMEOUTS = {
     "TOP_LOGGED_TASKS_BY_USER": 60,
 }
@@ -196,3 +199,12 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
+
+MINIO_ENDPOINT = env("MINIO_ENDPOINT")
+MINIO_PUBLIC_ENDPOINT = env("MINIO_PUBLIC_ENDPOINT")
+MINIO_USE_HTTPS = env.bool("MINIO_USE_HTTPS", default=False)
+MINIO_ACCESS_KEY = env("MINIO_ACCESS_KEY")
+MINIO_SECRET_KEY = env("MINIO_SECRET_KEY")
+MINIO_PRIVATE_BUCKETS = env.list("MINIO_PRIVATE_BUCKETS")
+MINIO_PUBLIC_BUCKETS = env.list("MINIO_PUBLIC_BUCKETS")
+MINIO_URL_EXPIRY_HOURS = env("MINIO_URL_EXPIRY_HOURS", default=168)

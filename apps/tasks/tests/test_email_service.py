@@ -40,7 +40,7 @@ class TestEmailService(APITestCase):
         success = EmailService.send_mail("subj", "broken.html", ["user@example.com"])
         assert success is False
 
-    @patch.object(EmailMultiAlternatives, "send", side_effect=ConnectionError("error"))
+    @patch("apps.tasks.services.email_service.EmailMultiAlternatives.send", side_effect=ConnectionError("error"))
     def test_send_email_template_connection_error(self, mock_email_multi_alternatives_send):
         success = EmailService.send_mail("subj", "hm.html", ["user@example.com"])
 

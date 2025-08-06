@@ -95,6 +95,8 @@ services:
             - uv.lock
             - pyproject.toml
             - .venv/
+            - .coverage
+            - htmlcov/
             - "**/tests.py"
             - "**/migrations"
             - "**/static"

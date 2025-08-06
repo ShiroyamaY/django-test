@@ -35,12 +35,6 @@ class TestTimeLogsAPI(APITestCase):
         token = RefreshToken.for_user(user).access_token
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
 
-    def _get_task_time_logs_list_url(self):
-        return reverse("tasks-time-logs-list")
-
-    def _get_task_time_logs_destroy_url(self):
-        return reverse("tasks-time-logs-destroy")
-
     def _get_task_time_logs_log_date_url(self):
         return reverse("tasks-time-logs-log-date")
 

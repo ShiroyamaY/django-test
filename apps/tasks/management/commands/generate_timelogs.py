@@ -7,8 +7,6 @@ from faker import Faker
 
 from apps.tasks.models import Task, TimeLog
 
-fake = Faker()
-
 
 class Command(BaseCommand):
     help = "Generates timelogs"
@@ -27,6 +25,7 @@ class Command(BaseCommand):
             return
 
         logs = []
+        fake = Faker()
 
         for _ in range(count):
             task = random.choice(tasks)

@@ -8,3 +8,10 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
+    }
+}

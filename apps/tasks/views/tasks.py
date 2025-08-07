@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
+from apps.tasks.tasks import send_task_assigned_notification, send_task_completed_notification
 
 from apps.common.helpers import get_previous_month_range_utc
 from apps.common.views import MultiSerializerMixin
@@ -52,7 +53,7 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
                     | Q(time_logs__date__gte=start, time_logs__date__lte=end)
                 )
                 .annotate(total_minutes=Sum("time_logs__duration_minutes"))
-                .filter(total_minutes__gt=0)
+                .filter(total_minutes__gt=0, user=self.request.user)
                 .order_by("-total_minutes")
                 .only("id", "title")[:20]
             )
@@ -63,7 +64,7 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
 
     def perform_create(self, serializer: TaskCreateSerializer):
         task = serializer.save(assignee=self.request.user)
-        EmailService.send_task_assigned_notification(task)
+        send_task_assigned_notification.delay(task.id)
 
     @extend_schema(
         request=None,
@@ -77,10 +78,10 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
         serializer.is_valid(raise_exception=True)
         task = serializer.save()
 
-        send_to = {comment.author for comment in task.comments.all()}
-        send_to.add(task.assignee)
+        send_to = {comment.author.id for comment in task.comments.all()}
+        send_to.add(task.assignee.id)
 
-        EmailService.send_task_completed_notification(task, send_to)
+        send_task_completed_notification.delay(task.id, list(send_to))
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -91,7 +92,7 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
         serializer.is_valid(raise_exception=True)
         task = serializer.save()
 
-        EmailService.send_task_assigned_notification(task)
+        send_task_assigned_notification.delay(task.id)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 

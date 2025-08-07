@@ -145,8 +145,8 @@ class TaskRetrieveAPITests(TasksAPITestCase):
 
 
 class TaskCreateAPITests(TasksAPITestCase):
-    @patch("apps.tasks.services.email_service.EmailService.send_task_assigned_notification")
-    def test_create_task_success(self, mock_send_task_assigned_notification):
+    @patch("apps.tasks.tasks.send_task_assigned_notification.delay")
+    def test_create_task_success(self, mock_send_task_assigned_notification_delay):
         task_data = {
             "title": "New Important Task",
             "description": "This is a detailed task description",
@@ -162,7 +162,7 @@ class TaskCreateAPITests(TasksAPITestCase):
         self.assertEqual(response.data, expected_data)
         self.assertEqual(created_task.title, task_data["title"])
         self.assertEqual(created_task.description, task_data["description"])
-        mock_send_task_assigned_notification.assert_called_once_with(created_task)
+        mock_send_task_assigned_notification_delay.assert_called_once_with(created_task.id)
 
     def test_create_task_with_invalid_data(self):
         invalid_data = {
@@ -265,8 +265,8 @@ class TaskCompleteAPITests(TasksAPITestCase):
 
 
 class TaskAssignAPITests(TasksAPITestCase):
-    @patch("apps.tasks.services.email_service.EmailService.send_task_assigned_notification")
-    def test_assign_user_to_task(self, mock_send_task_assigned_notification):
+    @patch("apps.tasks.tasks.send_task_assigned_notification.delay")
+    def test_assign_user_to_task(self, mock_send_task_assigned_notification_delay):
         task = TaskFactory(title="Task for Assignment", status=Task.Status.OPEN, assignee=self.user1)
         new_assignee = self.user2
 
@@ -275,10 +275,10 @@ class TaskAssignAPITests(TasksAPITestCase):
         task.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(task.assignee, new_assignee)
-        mock_send_task_assigned_notification.assert_called_once_with(task)
+        mock_send_task_assigned_notification_delay.assert_called_once_with(task.id)
 
-    @patch("apps.tasks.services.email_service.EmailService.send_task_assigned_notification")
-    def test_reassign_task_to_same_user(self, mock_send_task_assigned_notification):
+    @patch("apps.tasks.tasks.send_task_assigned_notification.delay")
+    def test_reassign_task_to_same_user(self, mock_send_task_assigned_notification_delay):
         task = TaskFactory(status=Task.Status.OPEN, assignee=self.user1)
 
         response = self.client.patch(self._get_task_assign_url(task.id), {"assignee": self.user1.id}, format="json")
@@ -286,7 +286,7 @@ class TaskAssignAPITests(TasksAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(task.assignee, self.user1)
-        mock_send_task_assigned_notification.assert_called_once_with(task)
+        mock_send_task_assigned_notification_delay.assert_called_once_with(task.id)
 
     def test_assign_nonexistent_user(self):
         task = TaskFactory(status=Task.Status.OPEN, assignee=self.user1)
@@ -432,7 +432,7 @@ class TopTasksAPITests(TasksAPITestCase):
             self.assertTrue(cache.get(cache_key))
             mock_get_serializer.assert_called_once()
 
-        with patch("apps.tasks.views.tasks.TaskView.get_queryset") as mock_get_serializer:
+        with patch("apps.tasks.views.tasks.TaskView.get_serializerвы") as mock_get_serializer:
             response = self.client.get(self._get_top_tasks_url())
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)

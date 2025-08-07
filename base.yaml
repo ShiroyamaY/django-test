@@ -47,6 +47,9 @@ services:
       MINIO_PRIVATE_BUCKETS:
       MINIO_PUBLIC_BUCKETS:
       MINIO_PUBLIC_ENDPOINT:
+
+      CELERY_BROKER_URL:
+      CELERY_RESULT_BACKEND:
   tms-base:
     extends:
       service: tms

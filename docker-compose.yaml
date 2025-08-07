@@ -15,6 +15,45 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - caddy_data:/data
     restart: unless-stopped
+  tms:
+    extends:
+      file: base.yaml
+      service: tms
+    build:
+      context: .
+    container_name: tms-container
+    depends_on: &tms_depends_on
+      tms-migrations:
+        condition: service_completed_successfully
+    labels:
+      caddy: tms.lvh.me
+      caddy.tls: internal
+      caddy.reverse_proxy: "tms:8000"
+    networks:
+      - caddy
+    develop: &tms_develop
+      watch:
+        - action: sync+restart
+          path: .
+          target: /tms
+          ignore:
+            - Dockerfile
+            - docker-compose.yaml
+            - .dockerignore
+            - uv.lock
+            - pyproject.toml
+            - .venv/
+            - .coverage
+            - htmlcov/
+            - "**/tests.py"
+            - "**/migrations"
+            - "**/static"
+        - action: rebuild
+          path: Dockerfile
+        - action: rebuild
+          path: .dockerignore
+        - action: rebuild
+          path: uv.lock
   email:
       image: rnwood/smtp4dev
       init: true
@@ -86,42 +125,26 @@ services:
       caddy_2: web.minio.lvh.me
       caddy_2.tls: internal
       caddy_2.reverse_proxy: "minio:9001"
-  tms:
+  celery:
     extends:
       file: base.yaml
-      service: tms
-    build:
-      context: .
-    container_name: tms-container
-    labels:
-      caddy: tms.lvh.me
-      caddy.tls: internal
-      caddy.reverse_proxy: "tms:8000"
-    networks:
-      - caddy
+      service: tms-base
+    container_name: tms-celery
+    depends_on:
+      <<: *tms_depends_on
+    entrypoint: [ "celery", "-A", "tms", "worker", "--loglevel=info" ]
     develop:
-      watch:
-        - action: sync+restart
-          path: .
-          target: /tms
-          ignore:
-            - Dockerfile
-            - docker-compose.yaml
-            - .dockerignore
-            - uv.lock
-            - pyproject.toml
-            - .venv/
-            - .coverage
-            - htmlcov/
-            - "**/tests.py"
-            - "**/migrations"
-            - "**/static"
-        - action: rebuild
-          path: Dockerfile
-        - action: rebuild
-          path: .dockerignore
-        - action: rebuild
-          path: uv.lock
+      <<: *tms_develop
+  celery-beat:
+    extends:
+      file: base.yaml
+      service: tms-base
+    container_name: tms-celery-beat
+    depends_on:
+      <<: *tms_depends_on
+    entrypoint: [ "celery", "-A", "tms", "beat", "--loglevel=info" ]
+    develop:
+      <<: *tms_develop
 volumes:
   smtp_data: {}
   caddy_data: {}

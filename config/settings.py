@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+from datetime import timedelta
 from pathlib import Path
 
 from environ import Env
@@ -18,7 +18,6 @@ env = Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
     CSRF_TRUSTED_ORIGINS=(list, []),
-    LANGUAGE_CODE=(str, "en-us"),
 )
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -152,6 +151,8 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
     "DEFAULT_PARSER_CLASSES": ("rest_framework.parsers.JSONParser",),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 10
 }
 
 SPECTACULAR_SETTINGS = {
@@ -187,7 +188,11 @@ CACHES = {
     }
 }
 
-
 CACHE_TIMEOUTS = {
     "TOP_LOGGED_TASKS_BY_USER": 60,
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }

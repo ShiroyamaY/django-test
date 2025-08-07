@@ -560,7 +560,6 @@ name = "venv"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
-    { name = "coverage" },
     { name = "django" },
     { name = "django-cors-headers" },
     { name = "django-environ" },
@@ -569,18 +568,22 @@ dependencies = [
     { name = "djangorestframework" },
     { name = "djangorestframework-simplejwt" },
     { name = "drf-spectacular" },
-    { name = "factory-boy" },
     { name = "gunicorn" },
-    { name = "parameterized" },
-    { name = "pre-commit" },
     { name = "psycopg", extra = ["binary"] },
     { name = "python-dateutil" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "coverage" },
+    { name = "factory-boy" },
+    { name = "parameterized" },
+    { name = "pre-commit" },
     { name = "ruff" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "coverage", specifier = "~=7.6" },
     { name = "django", specifier = "~=4.2" },
     { name = "django-cors-headers", specifier = "~=4.4" },
     { name = "django-environ", specifier = ">=0.12.0" },
@@ -589,13 +592,18 @@ requires-dist = [
     { name = "djangorestframework", specifier = "~=3.15" },
     { name = "djangorestframework-simplejwt", specifier = "~=5.3" },
     { name = "drf-spectacular", specifier = "~=0.27" },
-    { name = "factory-boy", specifier = ">=3.3.3" },
     { name = "gunicorn", specifier = ">=23.0.0" },
-    { name = "parameterized", specifier = ">=0.9.0" },
-    { name = "pre-commit", specifier = "~=4.2" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.1" },
     { name = "python-dateutil", specifier = ">=2.9.0.post0" },
-    { name = "ruff", specifier = "==0.12.7" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "coverage", specifier = ">=7.10.1" },
+    { name = "factory-boy", specifier = ">=3.3.3" },
+    { name = "parameterized", specifier = ">=0.9.0" },
+    { name = "pre-commit", specifier = ">=4.2.0" },
+    { name = "ruff", specifier = ">=0.12.7" },
 ]
 
 [[package]]

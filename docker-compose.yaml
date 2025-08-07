@@ -74,9 +74,6 @@ services:
     build:
       context: .
     container_name: tms-container
-    depends_on:
-      tms-migrations:
-        condition: service_completed_successfully
     labels:
       caddy: tms.lvh.me
       caddy.tls: internal
@@ -106,20 +103,6 @@ services:
           path: .dockerignore
         - action: rebuild
           path: uv.lock
-  tms-migrations:
-    extends:
-      file: base.yaml
-      service: tms-base
-    container_name: tms-migrations
-    entrypoint: [ "python", "manage.py", "migrate" ]
-    develop:
-      watch:
-        - action: sync+restart
-          path: tasks/migrations
-          target: /tms/tasks/migrations
-        - action: sync+restart
-          path: users/migrations
-          target: /tms/users/migrations
 volumes:
   smtp_data: {}
   caddy_data: {}

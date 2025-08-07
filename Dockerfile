@@ -1,38 +1,38 @@
-ARG PYTHON_VERSION="3.13"
-ARG WORKDIR_PATH="/tms"
-ARG VIRTUAL_ENV="/tms/.venv"
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS build
 
-FROM ghcr.io/astral-sh/uv:python${PYTHON_VERSION}-bookworm-slim AS build
+ARG ENVIRONMENT=dev
 
-ARG WORKDIR_PATH
-WORKDIR ${WORKDIR_PATH}
+WORKDIR /tms
 
 ENV UV_COMPILE_BYTECODE=1
-
 ENV UV_LINK_MODE=copy
+ENV ENVIRONMENT=${ENVIRONMENT}
+COPY pyproject.toml /tms/pyproject.toml
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-  --mount=type=bind,source=uv.lock,target=uv.lock \
-  --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-  uv sync --frozen --no-install-project --no-dev
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    if [ "$ENVIRONMENT" = "prod" ]; then \
+        uv sync --frozen --no-install-project --no-dev; \
+    else \
+        uv sync --frozen --no-install-project; \
+    fi
 
 COPY . .
 
-FROM python:${PYTHON_VERSION}-slim AS final
-
-ARG WORKDIR_PATH
-ARG VIRTUAL_ENV
+FROM python:3.13-slim AS final
 
 RUN useradd -mu 1000 node
 USER node
 
-ENV VIRTUAL_ENV=${VIRTUAL_ENV}
+WORKDIR /tms
 
-WORKDIR "${WORKDIR_PATH}"
-
-COPY --chown=node --from=build ${WORKDIR_PATH} ${WORKDIR_PATH}
+ENV VIRTUAL_ENV=./.venv
 ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
 
-ENTRYPOINT ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+COPY --chown=node --from=build /tms /tms
+COPY --chown=node start.sh ./start.sh
 
-EXPOSE 8000
+RUN chmod +x ./start.sh
+
+ENTRYPOINT ["./start.sh"]

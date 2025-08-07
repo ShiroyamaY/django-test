@@ -6,7 +6,7 @@ from django_minio_backend import iso_date_prefix
 
 from apps.common.models import TimeStampMixin
 from apps.common.storage import PublicMinioBackend
-from config.settings import MINIO_PUBLIC_BUCKETS
+from tms.settings import MINIO_PUBLIC_BUCKETS
 
 
 class Task(TimeStampMixin, models.Model):

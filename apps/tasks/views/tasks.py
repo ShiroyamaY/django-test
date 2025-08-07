@@ -23,8 +23,8 @@ from apps.tasks.serializers import (
     TaskUpdateSerializer,
     TopTaskSerializer,
 )
-from apps.tasks.services.email_service import EmailService
-from config.settings import CACHE_TIMEOUTS
+
+from tms.settings import CACHE_TIMEOUTS
 
 
 class TaskView(MultiSerializerMixin, ModelViewSet):

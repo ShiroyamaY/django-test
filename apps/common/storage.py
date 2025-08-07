@@ -1,7 +1,7 @@
 from django_minio_backend import MinioBackend
 from urllib3.exceptions import MaxRetryError
 
-from config.settings import MINIO_PUBLIC_ENDPOINT, MINIO_URL_EXPIRY_HOURS
+from tms.settings import MINIO_PUBLIC_ENDPOINT, MINIO_URL_EXPIRY_HOURS
 
 
 class PublicMinioBackend(MinioBackend):

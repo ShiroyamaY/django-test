@@ -50,6 +50,8 @@ services:
 
       CELERY_BROKER_URL:
       CELERY_RESULT_BACKEND:
+
+      ELASTICSEARCH_HOST:
   tms-base:
     extends:
       service: tms

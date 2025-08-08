@@ -22,15 +22,15 @@ services:
     build:
       context: .
     container_name: tms-container
-    depends_on: &tms_depends_on
-      tms-migrations:
-        condition: service_completed_successfully
     labels:
       caddy: tms.lvh.me
       caddy.tls: internal
       caddy.reverse_proxy: "tms:8000"
     networks:
       - caddy
+    depends_on:
+      elastic:
+        condition: service_healthy
     develop: &tms_develop
       watch:
         - action: sync+restart
@@ -130,8 +130,6 @@ services:
       file: base.yaml
       service: tms-base
     container_name: tms-celery
-    depends_on:
-      <<: *tms_depends_on
     entrypoint: [ "celery", "-A", "tms", "worker", "--loglevel=info" ]
     develop:
       <<: *tms_develop
@@ -140,15 +138,37 @@ services:
       file: base.yaml
       service: tms-base
     container_name: tms-celery-beat
-    depends_on:
-      <<: *tms_depends_on
     entrypoint: [ "celery", "-A", "tms", "beat", "--loglevel=info" ]
     develop:
       <<: *tms_develop
+
+  elastic:
+    image: elasticsearch:8.17.9
+    restart: on-failure
+    environment:
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD
+      - xpack.security.http.ssl.enabled=false
+    mem_limit: "1G"
+    networks:
+      - caddy
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+    labels:
+      caddy: elastic.lvh.me
+      caddy.tls: internal
+      caddy.reverse_proxy: "{{upstreams 9200}}"
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -f http://elastic:${ELASTIC_PASSWORD}@elastic:9200"]
+      interval: 5s
+      timeout: 5s
+      retries: 35
 volumes:
   smtp_data: {}
   caddy_data: {}
   postgres_data: {}
   minio_data: {}
+  elastic_data: {}
 networks:
   caddy: {}

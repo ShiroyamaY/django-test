@@ -1,0 +1,49 @@
+services:
+  tms:
+    image: tms-image
+
+    networks:
+      - caddy
+      - default
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+    environment:
+      DJANGO_SETTINGS_MODULE:
+
+      SECRET_KEY:
+      DEBUG:
+      ALLOWED_HOSTS:
+      CSRF_TRUSTED_ORIGINS:
+
+      DB_ENGINE:
+      POSTGRES_DB:
+      POSTGRES_USER:
+      POSTGRES_PASSWORD:
+      DB_HOST=postgres:
+      DB_PORT=5432:
+
+      EMAIL_BACKEND:
+      EMAIL_HOST:
+      EMAIL_PORT:
+      EMAIL_USE_TLS:
+      DEFAULT_FROM_EMAIL:
+
+      PGHERO_USERNAME:
+      PGHERO_PASSWORD:
+
+      CACHE_BACKEND:
+      CACHE_LOCATION:
+      CACHE_CLIENT_CLASS:
+
+  tms-base:
+    extends:
+      service: tms
+
+    build:
+      additional_contexts:
+        app: docker-image://tms

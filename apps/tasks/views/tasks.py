@@ -1,3 +1,4 @@
+from django.core.cache import cache
 from django.db.models import QuerySet
 from django.db.models.aggregates import Sum
 from django.db.models.query_utils import Q
@@ -23,6 +24,7 @@ from apps.tasks.serializers import (
     TopTaskSerializer,
 )
 from apps.tasks.services.email_service import EmailService
+from config.settings import CACHE_TIMEOUTS
 
 
 class TaskView(MultiSerializerMixin, ModelViewSet):
@@ -95,6 +97,15 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="top-logged-tasks-last-month")
     def top_logged_tasks_last_month(self, request: Request, pk=None):
-        top_tasks: QuerySet = self.get_queryset()
+        cache_key = f"top_logged_tasks_by_user_{request.user.pk}"
+        cached_data = cache.get(cache_key)
 
-        return Response(self.get_serializer(top_tasks, many=True).data, status=status.HTTP_200_OK)
+        if cached_data:
+            return Response(cached_data, status=status.HTTP_200_OK)
+
+        top_tasks: QuerySet = self.get_queryset()
+        serializer = self.get_serializer(top_tasks, many=True)
+        data = serializer.data
+
+        cache.set(cache_key, data, CACHE_TIMEOUTS["TOP_LOGGED_TASKS_BY_USER"])
+        return Response(data, status=status.HTTP_200_OK)

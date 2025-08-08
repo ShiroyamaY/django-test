@@ -7,10 +7,10 @@ from apps.tasks.views.time_logs import TimeLogView
 
 router = DefaultRouter()
 
-
-router.register("comments", CommentView, basename="comments")
-router.register("time-logs", TimeLogView, basename="time_logs")
+router.register("tasks/comments", CommentView, basename="tasks-comments")
+router.register("tasks/time-logs", TimeLogView, basename="tasks-time-logs")
 router.register("tasks", TaskView, basename="tasks")
+
 urlpatterns = [
     path("", include(router.urls)),
 ]

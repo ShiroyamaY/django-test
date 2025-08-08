@@ -1,4 +1,4 @@
-from config.settings import *
+from tms.settings import *
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

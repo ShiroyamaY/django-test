@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+
 from datetime import timedelta
 from pathlib import Path
 
@@ -49,6 +50,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "apps.tasks",
     "django_filters",
+    "django_minio_backend",
 ]
 
 MIDDLEWARE = [
@@ -62,7 +64,7 @@ MIDDLEWARE = [
     "apps.common.middlewares.ApiMiddleware",
 ]
 
-ROOT_URLCONF = "config.urls"
+ROOT_URLCONF = "tms.urls"
 
 TEMPLATES = [
     {
@@ -80,7 +82,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "config.wsgi.application"
+WSGI_APPLICATION = "tms.wsgi.application"
 
 
 # Database
@@ -151,8 +153,8 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
     "DEFAULT_PARSER_CLASSES": ("rest_framework.parsers.JSONParser",),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 10
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 10,
 }
 
 SPECTACULAR_SETTINGS = {
@@ -170,6 +172,7 @@ SPECTACULAR_SETTINGS = {
             },
         },
     },
+    "COMPONENT_SPLIT_REQUEST": True,
 }
 
 EMAIL_BACKEND = env("EMAIL_BACKEND")
@@ -193,6 +196,20 @@ CACHE_TIMEOUTS = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
+
+MINIO_ENDPOINT = env("MINIO_ENDPOINT")
+MINIO_PUBLIC_ENDPOINT = env("MINIO_PUBLIC_ENDPOINT")
+MINIO_USE_HTTPS = env.bool("MINIO_USE_HTTPS", default=False)
+MINIO_ACCESS_KEY = env("MINIO_ACCESS_KEY")
+MINIO_SECRET_KEY = env("MINIO_SECRET_KEY")
+MINIO_PRIVATE_BUCKETS = env.list("MINIO_PRIVATE_BUCKETS")
+MINIO_PUBLIC_BUCKETS = env.list("MINIO_PUBLIC_BUCKETS")
+MINIO_URL_EXPIRY_HOURS = env("MINIO_URL_EXPIRY_HOURS", default=168)
+
+CELERY_BROKER_URL = env("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
+
+ELASTIC_HOSTS = env.list("ELASTIC_HOSTS")

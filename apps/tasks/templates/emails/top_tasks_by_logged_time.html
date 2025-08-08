@@ -1,0 +1,32 @@
+{% extends 'emails/base_email.html' %}
+
+{% block title %}Top Tasks Last Month{% endblock %}
+
+{% block header %}Top Tasks by Logged Time{% endblock %}
+
+{% block content %}
+    <h2>Hello!</h2>
+
+    <p>Here are the top 20 tasks from last month based on the total logged time:</p>
+
+    <table border="1" cellpadding="8" cellspacing="0" width="100%" style="border-collapse: collapse;">
+        <thead>
+            <tr>
+                <th align="left">#</th>
+                <th align="left">Task Title</th>
+                <th align="left">Logged Time (minutes)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ task.title }}</td>
+                    <td>{{ task.total_minutes }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p>To view more details, please log into the system.</p>
+{% endblock %}

@@ -15,6 +15,45 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - caddy_data:/data
     restart: unless-stopped
+  tms:
+    extends:
+      file: base.yaml
+      service: tms
+    build:
+      context: .
+    container_name: tms-container
+    labels:
+      caddy: tms.lvh.me
+      caddy.tls: internal
+      caddy.reverse_proxy: "tms:8000"
+    networks:
+      - caddy
+    depends_on:
+      elastic:
+        condition: service_healthy
+    develop: &tms_develop
+      watch:
+        - action: sync+restart
+          path: .
+          target: /tms
+          ignore:
+            - Dockerfile
+            - docker-compose.yaml
+            - .dockerignore
+            - uv.lock
+            - pyproject.toml
+            - .venv/
+            - .coverage
+            - htmlcov/
+            - "**/tests.py"
+            - "**/migrations"
+            - "**/static"
+        - action: rebuild
+          path: Dockerfile
+        - action: rebuild
+          path: .dockerignore
+        - action: rebuild
+          path: uv.lock
   email:
       image: rnwood/smtp4dev
       init: true
@@ -67,45 +106,69 @@ services:
       - "6379:6379"
     networks:
       - caddy
-  tms:
-    extends:
-      file: base.yaml
-      service: tms
-    build:
-      context: .
-    container_name: tms-container
-    labels:
-      caddy: tms.lvh.me
-      caddy.tls: internal
-      caddy.reverse_proxy: "tms:8000"
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    volumes:
+      - minio_data:/data
     networks:
       - caddy
+    labels:
+      caddy_1: minio.lvh.me
+      caddy_1.tls: internal
+      caddy_1.reverse_proxy: "minio:9000"
+      caddy_2: web.minio.lvh.me
+      caddy_2.tls: internal
+      caddy_2.reverse_proxy: "minio:9001"
+  celery:
+    extends:
+      file: base.yaml
+      service: tms-base
+    container_name: tms-celery
+    entrypoint: [ "celery", "-A", "tms", "worker", "--loglevel=info" ]
     develop:
-      watch:
-        - action: sync+restart
-          path: .
-          target: /tms
-          ignore:
-            - Dockerfile
-            - docker-compose.yaml
-            - .dockerignore
-            - uv.lock
-            - pyproject.toml
-            - .venv/
-            - .coverage
-            - htmlcov/
-            - "**/tests.py"
-            - "**/migrations"
-            - "**/static"
-        - action: rebuild
-          path: Dockerfile
-        - action: rebuild
-          path: .dockerignore
-        - action: rebuild
-          path: uv.lock
+      <<: *tms_develop
+  celery-beat:
+    extends:
+      file: base.yaml
+      service: tms-base
+    container_name: tms-celery-beat
+    entrypoint: [ "celery", "-A", "tms", "beat", "--loglevel=info" ]
+    develop:
+      <<: *tms_develop
+
+  elastic:
+    image: elasticsearch:8.17.9
+    restart: on-failure
+    environment:
+      - discovery.type=single-node
+      - ELASTIC_PASSWORD
+      - xpack.security.http.ssl.enabled=false
+    mem_limit: "1G"
+    networks:
+      - caddy
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+    labels:
+      caddy: elastic.lvh.me
+      caddy.tls: internal
+      caddy.reverse_proxy: "{{upstreams 9200}}"
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -f http://elastic:${ELASTIC_PASSWORD}@elastic:9200"]
+      interval: 5s
+      timeout: 5s
+      retries: 35
 volumes:
   smtp_data: {}
   caddy_data: {}
   postgres_data: {}
+  minio_data: {}
+  elastic_data: {}
 networks:
   caddy: {}

@@ -1,4 +1,5 @@
-from elasticsearch_dsl import Document, Text, Keyword, Date
+from elasticsearch_dsl import Date, Document, Keyword, Text
+
 
 class TaskDocument(Document):
     title = Text()

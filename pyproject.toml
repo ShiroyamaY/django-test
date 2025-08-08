@@ -49,6 +49,7 @@ select = [
     "N",
     "UP",
 ]
+extend-ignore = ["BLE001"]
 
 [tool.ruff]
 line-length = 120

@@ -10,7 +10,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from apps.tasks.tasks import send_task_assigned_notification, send_task_completed_notification
 
 from apps.common.helpers import get_previous_month_range_utc
 from apps.common.views import MultiSerializerMixin
@@ -24,7 +23,7 @@ from apps.tasks.serializers import (
     TaskUpdateSerializer,
     TopTaskSerializer,
 )
-
+from apps.tasks.tasks import send_task_assigned_notification, send_task_completed_notification
 from tms.settings import CACHE_TIMEOUTS
 
 

@@ -3,10 +3,8 @@ import logging
 from celery import shared_task
 from django.contrib.auth.models import User
 from django.db.models.aggregates import Sum
-from django.db.models.query_utils import Q
 
-from apps.common.helpers import get_previous_month_range_utc
-from apps.tasks.models import Task, Comment
+from apps.tasks.models import Comment, Task
 from apps.tasks.services.email_service import EmailService
 
 logger = logging.getLogger("apps.tasks")
@@ -107,7 +105,7 @@ def top_tasks_by_logged_time_report():
         if not top_tasks:
             raise ValueError("No tasks with logged time in last month.")
 
-        subject = f"Top tasks by logged time"
+        subject = "Top tasks by logged time"
         users_ids = User.objects.values_list("email", flat=True)
 
         return EmailService.send_mail(subject, "emails/top_tasks_by_logged_time.html", users_ids, {"tasks": top_tasks})

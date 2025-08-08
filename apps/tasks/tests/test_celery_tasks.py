@@ -1,7 +1,7 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from apps.tasks.factories import TaskFactory, CommentFactory
+from apps.tasks.factories import CommentFactory, TaskFactory
 from apps.tasks.services.email_service import EmailService
 from apps.tasks.tasks import (
     send_task_assigned_notification,

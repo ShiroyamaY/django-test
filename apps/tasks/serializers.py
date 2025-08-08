@@ -162,5 +162,5 @@ class AttachmentListSerializer(serializers.ModelSerializer):
 
 
 class SearchSerializer(serializers.Serializer):
-    target = serializers.ChoiceField(choices=['task', 'comment'], required=True)
+    target = serializers.ChoiceField(choices=["task", "comment"], required=True)
     query = serializers.CharField(required=True)

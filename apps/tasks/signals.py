@@ -1,12 +1,13 @@
 import logging
 
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
-from django.db.models.signals import post_save, post_delete
 
-from apps.tasks.elasticsearch_documents import TaskDocument, CommentDocument
-from apps.tasks.models import Task, Comment
+from apps.tasks.elasticsearch_documents import CommentDocument, TaskDocument
+from apps.tasks.models import Comment, Task
 
 logger = logging.getLogger(__name__)
+
 
 @receiver(post_save, sender=Task)
 def create_or_update_task_document(sender: str, instance: Task, created: bool, **kwargs):

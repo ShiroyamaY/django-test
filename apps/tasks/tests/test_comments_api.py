@@ -85,7 +85,7 @@ class TestCommentsAPI(APITestCase):
         response = self.client.get(self._get_task_comments_list_url())
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, expected_data)
+        self.assertEqual(response.data["results"], expected_data)
 
     def test_list_comments_filtered_by_task(self):
         for _i in range(4):
@@ -94,14 +94,14 @@ class TestCommentsAPI(APITestCase):
         response = self.client.get(self._get_task_comments_list_url(self.task.id))
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        for comment_data in response.data:
+        for comment_data in response.data["results"]:
             self.assertEqual(comment_data["task"], self.task.id)
 
     def test_list_comments_empty_result(self):
         response = self.client.get(self._get_task_comments_list_url())
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, [])
+        self.assertEqual(response.data["results"], [])
 
     def test_list_comments_unauthorized(self):
         self.client.credentials()

@@ -52,7 +52,7 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
                     | Q(time_logs__date__gte=start, time_logs__date__lte=end)
                 )
                 .annotate(total_minutes=Sum("time_logs__duration_minutes"))
-                .filter(total_minutes__gt=0, user=self.request.user)
+                .filter(total_minutes__gt=0, time_logs__user=self.request.user)
                 .order_by("-total_minutes")
                 .only("id", "title")[:20]
             )
@@ -99,13 +99,13 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
     def top_logged_tasks_last_month(self, request: Request, pk=None):
         cache_key = f"top_logged_tasks_by_user_{request.user.pk}"
         cached_data = cache.get(cache_key)
-
+        print("cached_data", cached_data)
         if cached_data:
             return Response(cached_data, status=status.HTTP_200_OK)
 
         top_tasks: QuerySet = self.get_queryset()
         serializer = self.get_serializer(top_tasks, many=True)
         data = serializer.data
-
+        print("data", data)
         cache.set(cache_key, data, CACHE_TIMEOUTS["TOP_LOGGED_TASKS_BY_USER"])
         return Response(data, status=status.HTTP_200_OK)

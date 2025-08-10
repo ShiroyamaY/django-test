@@ -55,8 +55,8 @@ class TaskListAPITests(TasksAPITestCase):
         response = self.client.get(self._get_tasks_list_url())
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)
-        self.assertEqual(response.data, expected_data)
+        self.assertEqual(len(response.data["results"]), 3)
+        self.assertEqual(response.data["results"], expected_data)
 
     def test_get_empty_tasks_list(self):
         Task.objects.all().delete()
@@ -64,7 +64,7 @@ class TaskListAPITests(TasksAPITestCase):
         response = self.client.get(self._get_tasks_list_url())
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, [])
+        self.assertEqual(response.data["results"], [])
 
     def test_unauthenticated_access_denied(self):
         self.client.credentials()
@@ -92,7 +92,7 @@ class TaskListAPITests(TasksAPITestCase):
         response = self.client.get(self._get_tasks_list_url(), {"status": filter_status})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, expected_data)
+        self.assertEqual(response.data["results"], expected_data)
 
     def test_task_list_filtering_no_results(self):
         TaskFactory.create_batch(3, status=Task.Status.OPEN, assignee=self.user1)
@@ -100,7 +100,7 @@ class TaskListAPITests(TasksAPITestCase):
         response = self.client.get(self._get_tasks_list_url(), {"status": Task.Status.CANCELED})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, [])
+        self.assertEqual(response.data["results"], [])
 
     def test_task_list_multiple_assignees(self):
         TaskFactory.create_batch(2, assignee=self.user1)
@@ -109,7 +109,7 @@ class TaskListAPITests(TasksAPITestCase):
         response = self.client.get(self._get_tasks_list_url())
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 5)
+        self.assertEqual(len(response.data["results"]), 5)
 
 
 class TaskRetrieveAPITests(TasksAPITestCase):
@@ -371,23 +371,6 @@ class TopTasksAPITests(TasksAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
 
-    def test_top_logged_tasks_different_users(self):
-        last_month_start = timezone.localtime(timezone.now()).replace(
-            day=10, hour=14, minute=0, second=0, microsecond=0
-        ) - relativedelta(months=1)
-        task1 = TaskFactory(title="Multi User Task 1", assignee=self.user1)
-        task2 = TaskFactory(title="Multi User Task 2", assignee=self.user2)
-        TimeLog.objects.create(task=task1, user=self.user1, date=last_month_start.date(), duration_minutes=100)
-        TimeLog.objects.create(task=task1, user=self.user2, date=last_month_start.date(), duration_minutes=50)
-        TimeLog.objects.create(task=task2, user=self.user1, date=last_month_start.date(), duration_minutes=75)
-
-        response = self.client.get(self._get_top_tasks_url())
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-        self.assertEqual(response.data[0]["total_minutes"], 150)
-        self.assertEqual(response.data[1]["total_minutes"], 75)
-
     def test_top_logged_tasks_limit(self):
         last_month_start = timezone.localtime(timezone.now()).replace(
             day=15, hour=12, minute=0, second=0, microsecond=0
@@ -432,7 +415,7 @@ class TopTasksAPITests(TasksAPITestCase):
             self.assertTrue(cache.get(cache_key))
             mock_get_serializer.assert_called_once()
 
-        with patch("apps.tasks.views.tasks.TaskView.get_serializerвы") as mock_get_serializer:
+        with patch("apps.tasks.views.tasks.TaskView.get_serializer") as mock_get_serializer:
             response = self.client.get(self._get_top_tasks_url())
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)

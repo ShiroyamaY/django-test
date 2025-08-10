@@ -38,7 +38,7 @@ class UsersAPITestCase(APITestCase):
         response = self.client.get(self._get_users_list_url())
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, serializer.data)
+        self.assertEqual(response.data["results"], serializer.data)
 
     def test_users_list_unauthorized(self):
         response = self.client.get(self._get_users_list_url())

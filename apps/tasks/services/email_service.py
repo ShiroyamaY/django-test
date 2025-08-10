@@ -11,7 +11,7 @@ logger = logging.getLogger("apps.tasks")
 
 class EmailService:
     @classmethod
-    def send_mail(cls, subject, template, to, context=None):
+    def send_mail(cls, subject: str, template: str, to: list[str], context=None):
         try:
             html_content = render_to_string(template, context)
             text_content = strip_tags(html_content)

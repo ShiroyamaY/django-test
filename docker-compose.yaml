@@ -4,11 +4,11 @@ services:
     container_name: caddy
     ports:
       - "80:80"
-      - "8443:8443"
+      - "443:443"
     networks:
       - caddy
     labels:
-      caddy.https_port: 8443
+      caddy.https_port: 443
     environment:
       - CADDY_INGRESS_NETWORKS=caddy
     volumes:

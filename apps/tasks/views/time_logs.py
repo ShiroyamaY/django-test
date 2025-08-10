@@ -34,12 +34,9 @@ class TimeLogView(MultiSerializerMixin, ListModelMixin, DestroyModelMixin, Gener
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        (
-            TimeLog.objects.filter(start_time__isnull=False, end_time=None).update(
-                end_time=serializer.validated_data["start_time"]
-            )
+        TimeLog.objects.filter(start_time__isnull=False, end_time=None).update(
+            end_time=serializer.validated_data["start_time"]
         )
-
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)

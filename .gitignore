@@ -1,5 +1,6 @@
 .idea
 db.sqlite3
+.env
 
 # Unit test / coverage reports
 htmlcov/
@@ -16,3 +17,4 @@ coverage.xml
 *.pyc
 __pycache__/
 local_settings.py
+**/migrations/

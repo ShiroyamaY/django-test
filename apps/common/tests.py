@@ -11,7 +11,7 @@ from apps.common.middlewares import ApiMiddleware
 
 
 class TestCommon(TestCase):
-    fixtures = ["users"]
+    fixtures = ["apps/common/fixtures/users.json"]
 
     def setUp(self) -> None:
         self.client = APIClient()

@@ -99,13 +99,13 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
     def top_logged_tasks_last_month(self, request: Request, pk=None):
         cache_key = f"top_logged_tasks_by_user_{request.user.pk}"
         cached_data = cache.get(cache_key)
-        print("cached_data", cached_data)
+
         if cached_data:
             return Response(cached_data, status=status.HTTP_200_OK)
 
         top_tasks: QuerySet = self.get_queryset()
         serializer = self.get_serializer(top_tasks, many=True)
         data = serializer.data
-        print("data", data)
+
         cache.set(cache_key, data, CACHE_TIMEOUTS["TOP_LOGGED_TASKS_BY_USER"])
         return Response(data, status=status.HTTP_200_OK)

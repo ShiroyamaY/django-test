@@ -46,11 +46,16 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sessions",
     "rest_framework.authtoken",
     "drf_spectacular",
     "apps.tasks",
     "django_filters",
     "django_minio_backend",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.github",
 ]
 
 MIDDLEWARE = [
@@ -62,6 +67,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "apps.common.middlewares.ApiMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = "tms.urls"
@@ -173,14 +179,17 @@ SPECTACULAR_SETTINGS = {
         },
     },
     "COMPONENT_SPLIT_REQUEST": True,
+    "EXTERNAL_DOCS": {"description": "allauth", "url": "/_allauth/openapi.html"},
 }
 
+# MAIL
 EMAIL_BACKEND = env("EMAIL_BACKEND")
 EMAIL_HOST = env("EMAIL_HOST")
 EMAIL_PORT = env("EMAIL_PORT")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=False)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="user@example.com")
 
+# CACHE
 CACHES = {
     "default": {
         "BACKEND": env("CACHE_BACKEND"),
@@ -195,11 +204,13 @@ CACHE_TIMEOUTS = {
     "TOP_LOGGED_TASKS_BY_USER": 60,
 }
 
+# SIMPLE JWT
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
 
+# MINIO
 MINIO_ENDPOINT = env("MINIO_ENDPOINT")
 MINIO_PUBLIC_ENDPOINT = env("MINIO_PUBLIC_ENDPOINT")
 MINIO_USE_HTTPS = env.bool("MINIO_USE_HTTPS", default=False)
@@ -209,7 +220,26 @@ MINIO_PRIVATE_BUCKETS = env.list("MINIO_PRIVATE_BUCKETS")
 MINIO_PUBLIC_BUCKETS = env.list("MINIO_PUBLIC_BUCKETS")
 MINIO_URL_EXPIRY_HOURS = env("MINIO_URL_EXPIRY_HOURS", default=168)
 
+# CELERY
 CELERY_BROKER_URL = env("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
 
+# ELASTIC
 ELASTIC_HOSTS = env.list("ELASTIC_HOSTS")
+
+# SOCIAL AUTH
+
+AUTHENTICATION_BACKENDS = [
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+SOCIALACCOUNT_PROVIDERS = {
+    "github": {"APP": {"client_id": env("GITHUB_CLIENT_ID"), "secret": env("GITHUB_SECRET_KEY"), "key": ""}}
+}
+LOGIN_REDIRECT_URL = "/"
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = True
+
+if DEBUG:
+    SECURE_SSL_REDIRECT = False

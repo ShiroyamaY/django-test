@@ -41,4 +41,4 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run python manage.py test --settings=tms.test_settings
+          uv run python manage.py test --settings=tms.settings

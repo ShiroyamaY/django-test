@@ -9,7 +9,7 @@ from apps.tasks.serializers import (
     CommentCreateSerializer,
     CommentRetrieveSerializer,
 )
-from apps.tasks.services.email_service import EmailService
+from apps.tasks.tasks import send_task_commented_notification
 
 
 class CommentView(MultiSerializerMixin, ListModelMixin, CreateModelMixin, GenericViewSet):
@@ -24,4 +24,4 @@ class CommentView(MultiSerializerMixin, ListModelMixin, CreateModelMixin, Generi
 
     def perform_create(self, serializer):
         comment = serializer.save(author=self.request.user)
-        EmailService.send_task_commented_notification(comment)
+        send_task_commented_notification.delay(comment.id)

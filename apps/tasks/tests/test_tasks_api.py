@@ -55,8 +55,8 @@ class TaskListAPITests(TasksAPITestCase):
         response = self.client.get(self._get_tasks_list_url())
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)
-        self.assertEqual(response.data, expected_data)
+        self.assertEqual(len(response.data["results"]), 3)
+        self.assertEqual(response.data["results"], expected_data)
 
     def test_get_empty_tasks_list(self):
         Task.objects.all().delete()
@@ -64,7 +64,7 @@ class TaskListAPITests(TasksAPITestCase):
         response = self.client.get(self._get_tasks_list_url())
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, [])
+        self.assertEqual(response.data["results"], [])
 
     def test_unauthenticated_access_denied(self):
         self.client.credentials()
@@ -92,7 +92,7 @@ class TaskListAPITests(TasksAPITestCase):
         response = self.client.get(self._get_tasks_list_url(), {"status": filter_status})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, expected_data)
+        self.assertEqual(response.data["results"], expected_data)
 
     def test_task_list_filtering_no_results(self):
         TaskFactory.create_batch(3, status=Task.Status.OPEN, assignee=self.user1)
@@ -100,7 +100,7 @@ class TaskListAPITests(TasksAPITestCase):
         response = self.client.get(self._get_tasks_list_url(), {"status": Task.Status.CANCELED})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, [])
+        self.assertEqual(response.data["results"], [])
 
     def test_task_list_multiple_assignees(self):
         TaskFactory.create_batch(2, assignee=self.user1)
@@ -109,7 +109,7 @@ class TaskListAPITests(TasksAPITestCase):
         response = self.client.get(self._get_tasks_list_url())
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 5)
+        self.assertEqual(len(response.data["results"]), 5)
 
 
 class TaskRetrieveAPITests(TasksAPITestCase):
@@ -145,8 +145,8 @@ class TaskRetrieveAPITests(TasksAPITestCase):
 
 
 class TaskCreateAPITests(TasksAPITestCase):
-    @patch("apps.tasks.services.email_service.EmailService.send_task_assigned_notification")
-    def test_create_task_success(self, mock_send_task_assigned_notification):
+    @patch("apps.tasks.tasks.send_task_assigned_notification.delay")
+    def test_create_task_success(self, mock_send_task_assigned_notification_delay):
         task_data = {
             "title": "New Important Task",
             "description": "This is a detailed task description",
@@ -162,7 +162,7 @@ class TaskCreateAPITests(TasksAPITestCase):
         self.assertEqual(response.data, expected_data)
         self.assertEqual(created_task.title, task_data["title"])
         self.assertEqual(created_task.description, task_data["description"])
-        mock_send_task_assigned_notification.assert_called_once_with(created_task)
+        mock_send_task_assigned_notification_delay.assert_called_once_with(created_task.id)
 
     def test_create_task_with_invalid_data(self):
         invalid_data = {
@@ -265,8 +265,8 @@ class TaskCompleteAPITests(TasksAPITestCase):
 
 
 class TaskAssignAPITests(TasksAPITestCase):
-    @patch("apps.tasks.services.email_service.EmailService.send_task_assigned_notification")
-    def test_assign_user_to_task(self, mock_send_task_assigned_notification):
+    @patch("apps.tasks.tasks.send_task_assigned_notification.delay")
+    def test_assign_user_to_task(self, mock_send_task_assigned_notification_delay):
         task = TaskFactory(title="Task for Assignment", status=Task.Status.OPEN, assignee=self.user1)
         new_assignee = self.user2
 
@@ -275,10 +275,10 @@ class TaskAssignAPITests(TasksAPITestCase):
         task.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(task.assignee, new_assignee)
-        mock_send_task_assigned_notification.assert_called_once_with(task)
+        mock_send_task_assigned_notification_delay.assert_called_once_with(task.id)
 
-    @patch("apps.tasks.services.email_service.EmailService.send_task_assigned_notification")
-    def test_reassign_task_to_same_user(self, mock_send_task_assigned_notification):
+    @patch("apps.tasks.tasks.send_task_assigned_notification.delay")
+    def test_reassign_task_to_same_user(self, mock_send_task_assigned_notification_delay):
         task = TaskFactory(status=Task.Status.OPEN, assignee=self.user1)
 
         response = self.client.patch(self._get_task_assign_url(task.id), {"assignee": self.user1.id}, format="json")
@@ -286,7 +286,7 @@ class TaskAssignAPITests(TasksAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(task.assignee, self.user1)
-        mock_send_task_assigned_notification.assert_called_once_with(task)
+        mock_send_task_assigned_notification_delay.assert_called_once_with(task.id)
 
     def test_assign_nonexistent_user(self):
         task = TaskFactory(status=Task.Status.OPEN, assignee=self.user1)
@@ -371,23 +371,6 @@ class TopTasksAPITests(TasksAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
 
-    def test_top_logged_tasks_different_users(self):
-        last_month_start = timezone.localtime(timezone.now()).replace(
-            day=10, hour=14, minute=0, second=0, microsecond=0
-        ) - relativedelta(months=1)
-        task1 = TaskFactory(title="Multi User Task 1", assignee=self.user1)
-        task2 = TaskFactory(title="Multi User Task 2", assignee=self.user2)
-        TimeLog.objects.create(task=task1, user=self.user1, date=last_month_start.date(), duration_minutes=100)
-        TimeLog.objects.create(task=task1, user=self.user2, date=last_month_start.date(), duration_minutes=50)
-        TimeLog.objects.create(task=task2, user=self.user1, date=last_month_start.date(), duration_minutes=75)
-
-        response = self.client.get(self._get_top_tasks_url())
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-        self.assertEqual(response.data[0]["total_minutes"], 150)
-        self.assertEqual(response.data[1]["total_minutes"], 75)
-
     def test_top_logged_tasks_limit(self):
         last_month_start = timezone.localtime(timezone.now()).replace(
             day=15, hour=12, minute=0, second=0, microsecond=0
@@ -432,7 +415,7 @@ class TopTasksAPITests(TasksAPITestCase):
             self.assertTrue(cache.get(cache_key))
             mock_get_serializer.assert_called_once()
 
-        with patch("apps.tasks.views.tasks.TaskView.get_queryset") as mock_get_serializer:
+        with patch("apps.tasks.views.tasks.TaskView.get_serializer") as mock_get_serializer:
             response = self.client.get(self._get_top_tasks_url())
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)

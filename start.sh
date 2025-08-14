@@ -8,7 +8,9 @@ python manage.py collectstatic --noinput
 echo "Running database migrations..."
 python manage.py makemigrations
 python manage.py migrate
-python manage.py init_es
+
+echo "Set elastic search indexes"
+python manage.py search_index --rebuild -f
 
 echo "Starting Gunicorn..."
 

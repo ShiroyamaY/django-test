@@ -1,7 +1,9 @@
 import logging
+from typing import Any
 
 from celery import shared_task
 from django.contrib.auth.models import User
+from django.db.models import QuerySet
 from django.db.models.aggregates import Sum
 
 from apps.tasks.models import Comment, Task
@@ -95,7 +97,7 @@ def send_task_commented_notification(comment_id: int):
 @shared_task
 def top_tasks_by_logged_time_report():
     try:
-        top_tasks: list[Task] = (
+        top_tasks: QuerySet[Task, dict[str, Any]] = (
             Task.objects.annotate(total_minutes=Sum("time_logs__duration_minutes"))
             .filter(total_minutes__gt=0)
             .order_by("-total_minutes")

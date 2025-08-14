@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.github",
+    "django_elasticsearch_dsl",
 ]
 
 MIDDLEWARE = [
@@ -227,8 +228,9 @@ CELERY_BROKER_URL = env("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
 
 # ELASTIC
-ELASTIC_HOSTS = env.list("ELASTIC_HOSTS")
-
+ELASTICSEARCH_DSL = {
+    "default": {"hosts": env("ELASTIC_HOSTS")},
+}
 # SOCIAL AUTH
 
 AUTHENTICATION_BACKENDS = [

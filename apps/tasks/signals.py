@@ -3,7 +3,7 @@ import logging
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
-from apps.tasks.elasticsearch_documents import CommentDocument, TaskDocument
+from apps.tasks.documents import CommentDocument, TaskDocument
 from apps.tasks.models import Comment, Task
 
 logger = logging.getLogger(__name__)

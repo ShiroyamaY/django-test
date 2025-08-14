@@ -4,7 +4,7 @@ from django.core.management.base import BaseCommand
 from elastic_transport import ConnectionError
 from elasticsearch_dsl import connections
 
-from apps.tasks.elasticsearch_documents import TaskDocument
+from apps.tasks.documents import TaskDocument
 from tms.settings import ELASTIC_HOSTS
 
 

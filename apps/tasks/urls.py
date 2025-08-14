@@ -1,11 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from apps.tasks.views.attachments import AttachmentView
-from apps.tasks.views.comments import CommentView
-from apps.tasks.views.search import SearchView
-from apps.tasks.views.tasks import TaskView
-from apps.tasks.views.time_logs import TimeLogView
+from apps.tasks.views import AttachmentView, CommentView, SearchView, TaskView, TimeLogView
 
 router = DefaultRouter()
 

@@ -424,7 +424,7 @@ class TopTasksAPITests(TasksAPITestCase):
             date=timezone.now().replace(day=1) - relativedelta(months=1),
         )
 
-        with patch("apps.tasks.views.tasks.TaskView.get_serializer") as mock_get_serializer:
+        with patch("apps.tasks.views.TaskView.get_serializer") as mock_get_serializer:
             mock_get_serializer.return_value.data = [{"id": task.id, "title": task.title, "total_minutes": 120}]
 
             response = self.client.get(self._get_top_tasks_url())
@@ -434,7 +434,7 @@ class TopTasksAPITests(TasksAPITestCase):
             self.assertTrue(cache.get(cache_key))
             mock_get_serializer.assert_called_once()
 
-        with patch("apps.tasks.views.tasks.TaskView.get_serializer") as mock_get_serializer:
+        with patch("apps.tasks.views.TaskView.get_serializer") as mock_get_serializer:
             response = self.client.get(self._get_top_tasks_url())
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)

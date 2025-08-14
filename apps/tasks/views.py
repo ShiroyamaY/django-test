@@ -36,11 +36,7 @@ from apps.tasks.serializers import (
     TimeLogStopSerializer,
     TopTaskSerializer,
 )
-from apps.tasks.tasks import (
-    send_task_assigned_notification,
-    send_task_commented_notification,
-    send_task_completed_notification,
-)
+from apps.tasks.signals import task_completed
 from tms.settings import CACHE_TIMEOUTS
 
 
@@ -78,10 +74,6 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
 
         return Task.objects.all()
 
-    def perform_create(self, serializer: TaskCreateSerializer):
-        task = serializer.save(assignee=self.request.user)
-        send_task_assigned_notification.delay(task.id)
-
     @extend_schema(
         request=None,
     )
@@ -97,7 +89,7 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
         send_to = {comment.author.id for comment in task.comments.all()}
         send_to.add(task.assignee.id)
 
-        send_task_completed_notification.delay(task.id, list(send_to))
+        task_completed.send(sender=self.__class__, task=task, send_to=send_to)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -106,9 +98,7 @@ class TaskView(MultiSerializerMixin, ModelViewSet):
         task = self.get_object()
         serializer = self.get_serializer(task, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        task = serializer.save()
-
-        send_task_assigned_notification.delay(task.id)
+        serializer.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -137,10 +127,6 @@ class CommentView(MultiSerializerMixin, ListModelMixin, CreateModelMixin, Generi
     multi_serializer_class = {
         "create": CommentCreateSerializer,
     }
-
-    def perform_create(self, serializer):
-        comment = serializer.save(author=self.request.user)
-        send_task_commented_notification.delay(comment.id)
 
 
 class SearchView(APIView):

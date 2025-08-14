@@ -11,12 +11,15 @@ class CommentRetrieveSerializer(serializers.ModelSerializer):
 
 
 class CommentCreateSerializer(serializers.ModelSerializer):
+    author = serializers.HiddenField(default=serializers.CurrentUserDefault(), write_only=True)
+
     class Meta:
         model = Comment
         fields = (
             "id",
             "text",
             "task",
+            "author",
         )
 
 
@@ -29,9 +32,11 @@ class TaskRetrieveSerializer(serializers.ModelSerializer):
 
 
 class TaskCreateSerializer(serializers.ModelSerializer):
+    assignee = serializers.HiddenField(default=serializers.CurrentUserDefault(), write_only=True)
+
     class Meta:
         model = Task
-        fields = ("id", "title", "description", "status")
+        fields = ("id", "title", "description", "status", "assignee")
 
 
 class TaskUpdateSerializer(serializers.ModelSerializer):

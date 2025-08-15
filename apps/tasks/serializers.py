@@ -152,12 +152,13 @@ class TimeLogSpecificDateSerializer(serializers.ModelSerializer):
         fields = ("task", "date", "duration_minutes", "user")
 
 
-class AttachmentCreateSerializer(serializers.ModelSerializer):
-    file = serializers.FileField()
+class AttachmentPresignUrlSerializer(serializers.ModelSerializer):
+    filename = serializers.CharField(write_only=True)
+    task_id = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = Attachment
-        fields = "__all__"
+        fields = ("filename", "task_id")
 
 
 class AttachmentListSerializer(serializers.ModelSerializer):

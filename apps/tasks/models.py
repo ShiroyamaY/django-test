@@ -2,10 +2,9 @@ from datetime import datetime
 
 from django.contrib.auth.models import User
 from django.db import models
-from django_minio_backend import MinioBackend, iso_date_prefix
+from django.db.models import TextChoices
 
 from apps.common.models import TimeStampMixin
-from tms.settings import MINIO_PUBLIC_BUCKETS
 
 
 class Task(TimeStampMixin, models.Model):
@@ -65,9 +64,14 @@ class TimeLog(TimeStampMixin, models.Model):
 
 
 class Attachment(TimeStampMixin, models.Model):
+    class Status(TextChoices):
+        PENDING = "Pending"
+        UPLOADED = "Uploaded"
+        FAILED = "Failed"
+
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="attachments")
-    file = models.FileField(
-        verbose_name="Object Upload",
-        storage=MinioBackend(bucket_name=MINIO_PUBLIC_BUCKETS[0]),
-        upload_to=iso_date_prefix,
-    )
+    filename = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(choices=Status.choices, default=Status.PENDING, max_length=20)
+    bucket = models.CharField(max_length=255, blank=True, null=True)
+    content_type = models.CharField(max_length=255, blank=True, null=True)
+    object_name = models.CharField(max_length=255)

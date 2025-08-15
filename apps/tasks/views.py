@@ -1,26 +1,29 @@
+import uuid
+
 from django.core.cache import cache
 from django.db.models import QuerySet
 from django.db.models.aggregates import Sum
 from django.db.models.query_utils import Q
 from django_filters.rest_framework import DjangoFilterBackend
+from django_minio_backend import MinioBackend
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import filters, status
 from rest_framework.decorators import action
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin, ListModelMixin
-from rest_framework.parsers import JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
+from apps.common.authentication import MinioWebhookAuthentication
 from apps.common.helpers import get_previous_month_range_utc
 from apps.common.views import MultiSerializerMixin
 from apps.tasks.documents import CommentDocument, TaskDocument
 from apps.tasks.models import Attachment, Comment, Task, TimeLog
 from apps.tasks.serializers import (
-    AttachmentCreateSerializer,
     AttachmentListSerializer,
+    AttachmentPresignUrlSerializer,
     CommentCreateSerializer,
     CommentRetrieveSerializer,
     SearchSerializer,
@@ -37,7 +40,11 @@ from apps.tasks.serializers import (
     TopTaskSerializer,
 )
 from apps.tasks.signals import task_completed
-from tms.settings import CACHE_TIMEOUTS
+from tms.settings import (
+    CACHE_TIMEOUTS,
+    MINIO_ATTACHMENTS_BUCKET,
+    MINIO_URL_EXPIRY_HOURS,
+)
 
 
 class TaskView(MultiSerializerMixin, ModelViewSet):
@@ -206,12 +213,62 @@ class TimeLogView(MultiSerializerMixin, ListModelMixin, DestroyModelMixin, Gener
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class AttachmentView(MultiSerializerMixin, ListModelMixin, CreateModelMixin, GenericViewSet):
+class AttachmentView(MultiSerializerMixin, ListModelMixin, GenericViewSet):
     permission_classes = [IsAuthenticated]
     queryset = Attachment.objects.all()
     serializer_class = AttachmentListSerializer
     multi_serializer_class = {
-        "create": AttachmentCreateSerializer,
+        "presign_upload": AttachmentPresignUrlSerializer,
         "list": AttachmentListSerializer,
     }
-    parser_classes = (MultiPartParser, JSONParser)
+
+    @action(detail=False, methods=["post"])
+    def presign_upload(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        object_name = str(uuid.uuid4())
+
+        attachment = Attachment.objects.create(
+            bucket=MINIO_ATTACHMENTS_BUCKET,
+            object_name=object_name,
+            status=Attachment.Status.PENDING,
+            task_id=data["task_id"],
+            filename=data["filename"],
+        )
+        attachment.save()
+
+        minio_backend = MinioBackend(bucket_name=MINIO_ATTACHMENTS_BUCKET)
+        presigned_url = minio_backend.client_external.get_presigned_url(
+            method="PUT",
+            bucket_name=MINIO_ATTACHMENTS_BUCKET,
+            object_name=attachment.object_name,
+            expires=MINIO_URL_EXPIRY_HOURS,
+        )
+
+        return Response(
+            {
+                "id": attachment.id,
+                "object_name": attachment.object_name,
+                "upload_url": presigned_url,
+            }
+        )
+
+
+class AttachmentsWebhookView(APIView):
+    authentication_classes = [MinioWebhookAuthentication]
+    permission_classes = []
+
+    def post(self, request, *args, **kwargs):
+        try:
+            record = request.data["Records"][0]
+            object_key = record["s3"]["object"]["key"]
+        except (KeyError, IndexError):
+            return Response({"error": "Invalid payload"}, status=status.HTTP_400_BAD_REQUEST)
+
+        updated = Attachment.objects.filter(object_name=object_key).update(status="uploaded")
+        if updated == 0:
+            return Response({"error": "Attachment not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        return Response({"message": "ok"})

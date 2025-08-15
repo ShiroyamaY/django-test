@@ -24,7 +24,7 @@ from drf_spectacular.views import (
 
 urlpatterns = [
     path(
-        "api/v1/",
+        "api/",
         include(
             [
                 path("users/", include("apps.users.urls")),

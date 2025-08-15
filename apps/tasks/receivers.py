@@ -11,12 +11,13 @@ from apps.tasks.tasks import (
 
 
 @receiver(post_save, sender=Task)
-def create_or_update_task_document(sender: str, instance: Task, created: bool, **kwargs):
-    send_task_assigned_notification.delay(instance.id)
+def handle_create_or_update_task(sender, instance, created, update_fields, **kwargs):
+    if created or (update_fields and "assignee" in update_fields):
+        send_task_assigned_notification.delay(instance.id)
 
 
 @receiver(post_save, sender=Comment)
-def create_or_update_comment_document(sender: str, instance: Comment, created: bool, **kwargs):
+def handle_create_or_update_comment(sender: str, instance: Comment, created: bool, **kwargs):
     if created:
         send_task_commented_notification.delay(instance.id)
 

@@ -17,7 +17,7 @@ echo "Starting Gunicorn..."
 : "${GUNICORN_WORKERS:=10}"
 : "${GUNICORN_BIND:=0.0.0.0:8000}"
 : "${GUNICORN_TIMEOUT:=300}"
-: "${DJANGO_SETTINGS_MODULE:=tms.settings}"
+: "${DJANGO_SETTINGS_MODULE:=config.settings}"
 
 exec gunicorn \
     --workers="$GUNICORN_WORKERS" \
@@ -25,4 +25,4 @@ exec gunicorn \
     --timeout="$GUNICORN_TIMEOUT" \
     --log-level=info \
     --env DJANGO_SETTINGS_MODULE="$DJANGO_SETTINGS_MODULE" \
-    tms.wsgi:application
+    config.wsgi:application

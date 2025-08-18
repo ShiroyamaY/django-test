@@ -7,7 +7,7 @@ from django.db.models import QuerySet
 from django.db.models.aggregates import Sum
 
 from apps.tasks.models import Comment, Task
-from apps.tasks.services.email_service import EmailService
+from apps.tasks.services import EmailService
 
 logger = logging.getLogger("apps.tasks")
 

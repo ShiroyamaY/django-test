@@ -1,7 +1,7 @@
 from rest_framework import authentication
 from rest_framework.exceptions import AuthenticationFailed
 
-from tms.settings import MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_ATTACHMENTS
+from config.settings import MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_ATTACHMENTS
 
 
 class MinioWebhookAuthentication(authentication.BaseAuthentication):

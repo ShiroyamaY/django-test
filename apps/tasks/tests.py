@@ -25,7 +25,7 @@ from apps.tasks.serializers import (
     TaskRetrieveSerializer,
     TopTaskSerializer,
 )
-from apps.tasks.services.email_service import EmailService
+from apps.tasks.services import EmailService
 from apps.tasks.tasks import (
     send_task_assigned_notification,
     send_task_commented_notification,
@@ -33,7 +33,7 @@ from apps.tasks.tasks import (
     top_tasks_by_logged_time_report,
 )
 from apps.users.factories import UserFactory
-from tms.settings import MINIO_ATTACHMENTS_BUCKET, MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_ATTACHMENTS
+from config.settings import MINIO_ATTACHMENTS_BUCKET, MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_ATTACHMENTS
 
 
 class TasksAPITestCase(APITestCase):
@@ -701,7 +701,7 @@ class TestEmailService(APITestCase):
     def setUp(self):
         logging.disable(logging.ERROR)
 
-    @patch("apps.tasks.services.email_service.render_to_string")
+    @patch("apps.tasks.services.render_to_string")
     @patch.object(EmailMultiAlternatives, "send")
     def test_send_email_success(self, mock_email_multi_alternatives_send, mock_render_to_string):
         mock_render_to_string.return_value = "<html><body>Hello, world!</body></html>"
@@ -717,17 +717,17 @@ class TestEmailService(APITestCase):
         assert success is True
         mock_email_multi_alternatives_send.assert_called_once()
 
-    @patch("apps.tasks.services.email_service.render_to_string", side_effect=TemplateDoesNotExist("error"))
+    @patch("apps.tasks.services.render_to_string", side_effect=TemplateDoesNotExist("error"))
     def test_send_email_template_not_found(self, mock_email_service_render_to_string):
         success = EmailService.send_mail("subj", "invalid.html", ["user@example.com"])
         assert success is False
 
-    @patch("apps.tasks.services.email_service.render_to_string", side_effect=TemplateSyntaxError("error"))
+    @patch("apps.tasks.services.render_to_string", side_effect=TemplateSyntaxError("error"))
     def test_send_email_template_syntax_error(self, mock_email_service_render_to_string):
         success = EmailService.send_mail("subj", "broken.html", ["user@example.com"])
         assert success is False
 
-    @patch("apps.tasks.services.email_service.EmailMultiAlternatives.send", side_effect=ConnectionError("error"))
+    @patch("apps.tasks.services.EmailMultiAlternatives.send", side_effect=ConnectionError("error"))
     def test_send_email_template_connection_error(self, mock_email_multi_alternatives_send):
         success = EmailService.send_mail("subj", "hm.html", ["user@example.com"])
 

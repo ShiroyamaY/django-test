@@ -41,7 +41,7 @@ from apps.tasks.serializers import (
     TopTaskSerializer,
 )
 from apps.tasks.signals import task_completed
-from tms.settings import (
+from config.settings import (
     CACHE_TIMEOUTS,
     MINIO_ATTACHMENTS_BUCKET,
     MINIO_URL_EXPIRY_HOURS,

@@ -155,7 +155,7 @@ services:
       file: base.yaml
       service: tms-base
     container_name: tms-celery
-    entrypoint: [ "/tms/.venv/bin/celery", "-A", "tms", "worker", "--loglevel=info" ]
+    entrypoint: [ "/tms/.venv/bin/celery", "-A", "config", "worker", "--loglevel=info" ]
     develop:
       <<: *tms_develop
   celery-beat:
@@ -163,7 +163,7 @@ services:
       file: base.yaml
       service: tms-base
     container_name: tms-celery-beat
-    entrypoint: [ "/tms/.venv/bin/celery", "-A", "tms", "beat", "--loglevel=info" ]
+    entrypoint: [ "/tms/.venv/bin/celery", "-A", "config", "beat", "--loglevel=info" ]
     develop:
       <<: *tms_develop
 

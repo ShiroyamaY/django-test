@@ -4,7 +4,7 @@ from django.core.mail.message import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
-from tms import settings
+from config import settings
 
 logger = logging.getLogger("apps.tasks")
 

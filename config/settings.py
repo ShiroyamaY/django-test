@@ -72,7 +72,7 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
 ]
 
-ROOT_URLCONF = "tms.urls"
+ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
@@ -90,7 +90,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "tms.wsgi.application"
+WSGI_APPLICATION = "config.wsgi.application"
 
 
 # Database

@@ -33,7 +33,7 @@ from apps.tasks.tasks import (
     top_tasks_by_logged_time_report,
 )
 from apps.users.factories import UserFactory
-from config.settings import MINIO_ATTACHMENTS_BUCKET, MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_ATTACHMENTS
+from config.settings import MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_ATTACHMENTS
 
 
 class TasksAPITestCase(APITestCase):
@@ -965,7 +965,6 @@ class AttachmentAPITests(APITestCase):
         attachment = Attachment.objects.get(id=response.data["id"])
         self.assertEqual(attachment.filename, "file.txt")
         self.assertEqual(attachment.status, Attachment.Status.PENDING)
-        self.assertEqual(attachment.bucket, MINIO_ATTACHMENTS_BUCKET)
         self.assertEqual(attachment.task_id, self.task.id)
 
     def test_webhook_updates_attachment_status(self):
@@ -973,10 +972,8 @@ class AttachmentAPITests(APITestCase):
 
         attachment = AttachmentFactory(
             task=self.task,
-            bucket=MINIO_ATTACHMENTS_BUCKET,
             object_name="test-object",
             status=Attachment.Status.PENDING,
-            filename="file.txt",
         )
 
         url = reverse("webhook-minio-attachments")

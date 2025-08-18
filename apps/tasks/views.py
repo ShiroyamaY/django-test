@@ -1,6 +1,7 @@
 import uuid
 
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models import QuerySet
 from django.db.models.aggregates import Sum
 from django.db.models.query_utils import Q
@@ -228,24 +229,24 @@ class AttachmentView(MultiSerializerMixin, ListModelMixin, GenericViewSet):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
 
-        object_name = str(uuid.uuid4())
+        with transaction.atomic():
+            object_name = str(uuid.uuid4())
 
-        attachment = Attachment.objects.create(
-            bucket=MINIO_ATTACHMENTS_BUCKET,
-            object_name=object_name,
-            status=Attachment.Status.PENDING,
-            task_id=data["task_id"],
-            filename=data["filename"],
-        )
-        attachment.save()
+            attachment = Attachment.objects.create(
+                bucket=MINIO_ATTACHMENTS_BUCKET,
+                object_name=object_name,
+                status=Attachment.Status.PENDING,
+                task_id=data["task_id"],
+                filename=data["filename"],
+            )
 
-        minio_backend = MinioBackend(bucket_name=MINIO_ATTACHMENTS_BUCKET)
-        presigned_url = minio_backend.client_external.get_presigned_url(
-            method="PUT",
-            bucket_name=MINIO_ATTACHMENTS_BUCKET,
-            object_name=attachment.object_name,
-            expires=MINIO_URL_EXPIRY_HOURS,
-        )
+            minio_backend = MinioBackend(bucket_name=MINIO_ATTACHMENTS_BUCKET)
+            presigned_url = minio_backend.client_external.get_presigned_url(
+                method="PUT",
+                bucket_name=MINIO_ATTACHMENTS_BUCKET,
+                object_name=attachment.object_name,
+                expires=MINIO_URL_EXPIRY_HOURS,
+            )
 
         return Response(
             {
@@ -267,7 +268,7 @@ class AttachmentsWebhookView(APIView):
         except (KeyError, IndexError):
             return Response({"error": "Invalid payload"}, status=status.HTTP_400_BAD_REQUEST)
 
-        updated = Attachment.objects.filter(object_name=object_key).update(status="uploaded")
+        updated = Attachment.objects.filter(object_name=object_key).update(status=Attachment.Status.UPLOADED)
         if updated == 0:
             return Response({"error": "Attachment not found"}, status=status.HTTP_404_NOT_FOUND)
 

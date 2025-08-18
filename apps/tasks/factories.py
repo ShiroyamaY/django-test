@@ -1,7 +1,7 @@
 import factory
 from factory.django import DjangoModelFactory
 
-from apps.tasks.models import Comment, Task, TimeLog
+from apps.tasks.models import Attachment, Comment, Task, TimeLog
 from apps.users.factories import UserFactory
 
 
@@ -30,3 +30,15 @@ class CommentFactory(DjangoModelFactory):
     text = factory.Faker("text", max_nb_chars=200)
     task = factory.SubFactory(TaskFactory)
     author = factory.SubFactory(UserFactory)
+
+
+class AttachmentFactory(DjangoModelFactory):
+    class Meta:
+        model = Attachment
+
+    task = factory.SubFactory(TaskFactory)
+    filename = factory.Faker("file_name")
+    status = Attachment.Status.PENDING
+    bucket = "test-bucket"
+    content_type = "text/plain"
+    object_name = factory.Faker("uuid4")

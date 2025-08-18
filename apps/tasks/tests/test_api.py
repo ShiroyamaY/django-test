@@ -16,8 +16,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from apps.tasks.factories import CommentFactory, TaskFactory, TimeLogFactory
-from apps.tasks.models import Comment, Task, TimeLog
+from apps.tasks.factories import AttachmentFactory, CommentFactory, TaskFactory, TimeLogFactory
+from apps.tasks.models import Attachment, Comment, Task, TimeLog
 from apps.tasks.serializers import (
     CommentRetrieveSerializer,
     TaskCreateSerializer,
@@ -33,6 +33,7 @@ from apps.tasks.tasks import (
     top_tasks_by_logged_time_report,
 )
 from apps.users.factories import UserFactory
+from tms.settings import MINIO_ATTACHMENTS_BUCKET, MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_ATTACHMENTS
 
 
 class TasksAPITestCase(APITestCase):
@@ -928,3 +929,91 @@ class TestTimeLogsAPI(APITestCase):
         response = self.client.post(self._get_task_time_logs_stop_timer_url(), {}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class AttachmentAPITests(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory()
+        cls.task = TaskFactory()
+
+    def setUp(self):
+        self._auth_jwt(self.user)
+
+    def _auth_jwt(self, user):
+        token = RefreshToken.for_user(user).access_token
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
+
+    def _auth_minio_webhook(self):
+        self.client.credentials()
+        self.client.credentials(HTTP_AUTHORIZATION=MINIO_NOTIFY_WEBHOOK_AUTH_TOKEN_ATTACHMENTS)
+
+    @patch("apps.tasks.views.MinioBackend")
+    def test_presign_upload_creates_attachment(self, mock_minio):
+        mock_instance = mock_minio.return_value
+        mock_instance.client_external.get_presigned_url.return_value = "http://presigned-url"
+
+        url = reverse("tasks-attachments-presign-upload")
+        data = {"task_id": self.task.id, "filename": "file.txt"}
+
+        response = self.client.post(url, data, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("id", response.data)
+        self.assertEqual(response.data["upload_url"], "http://presigned-url")
+
+        attachment = Attachment.objects.get(id=response.data["id"])
+        self.assertEqual(attachment.filename, "file.txt")
+        self.assertEqual(attachment.status, Attachment.Status.PENDING)
+        self.assertEqual(attachment.bucket, MINIO_ATTACHMENTS_BUCKET)
+        self.assertEqual(attachment.task_id, self.task.id)
+
+    def test_webhook_updates_attachment_status(self):
+        self._auth_minio_webhook()
+
+        attachment = AttachmentFactory(
+            task=self.task,
+            bucket=MINIO_ATTACHMENTS_BUCKET,
+            object_name="test-object",
+            status=Attachment.Status.PENDING,
+            filename="file.txt",
+        )
+
+        url = reverse("webhook-minio-attachments")
+        payload = {"Records": [{"s3": {"object": {"key": attachment.object_name}}}]}
+
+        response = self.client.post(url, payload, format="json")
+        attachment.refresh_from_db()
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(attachment.status, Attachment.Status.UPLOADED)
+
+    def test_webhook_attachment_not_found(self):
+        self._auth_minio_webhook()
+
+        url = reverse("webhook-minio-attachments")
+        payload = {"Records": [{"s3": {"object": {"key": "nonexistent"}}}]}
+
+        response = self.client.post(url, payload, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data["error"], "Attachment not found")
+
+    def test_webhook_invalid_payload(self):
+        self._auth_minio_webhook()
+
+        url = reverse("webhook-minio-attachments")
+        response = self.client.post(url, {"oops": "no-records"}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["error"], "Invalid payload")
+
+    def test_webhook_invalid_token_returns_403(self):
+        self.client.credentials()
+        self.client.credentials(HTTP_AUTHORIZATION="Bearer wrong-token")
+
+        url = reverse("webhook-minio-attachments")
+        payload = {"Records": [{"s3": {"object": {"key": "anything"}}}]}
+
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

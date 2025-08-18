@@ -1,7 +1,7 @@
 from django.db.models.aggregates import Sum
 from rest_framework import serializers
 
-from apps.tasks.models import Comment, Task, TimeLog
+from apps.tasks.models import Attachment, Comment, Task, TimeLog
 
 
 class CommentRetrieveSerializer(serializers.ModelSerializer):
@@ -11,12 +11,15 @@ class CommentRetrieveSerializer(serializers.ModelSerializer):
 
 
 class CommentCreateSerializer(serializers.ModelSerializer):
+    author = serializers.HiddenField(default=serializers.CurrentUserDefault(), write_only=True)
+
     class Meta:
         model = Comment
         fields = (
             "id",
             "text",
             "task",
+            "author",
         )
 
 
@@ -29,9 +32,11 @@ class TaskRetrieveSerializer(serializers.ModelSerializer):
 
 
 class TaskCreateSerializer(serializers.ModelSerializer):
+    assignee = serializers.HiddenField(default=serializers.CurrentUserDefault(), write_only=True)
+
     class Meta:
         model = Task
-        fields = ("id", "title", "description", "status")
+        fields = ("id", "title", "description", "status", "assignee")
 
 
 class TaskUpdateSerializer(serializers.ModelSerializer):
@@ -145,3 +150,23 @@ class TimeLogSpecificDateSerializer(serializers.ModelSerializer):
     class Meta:
         model = TimeLog
         fields = ("task", "date", "duration_minutes", "user")
+
+
+class AttachmentPresignUrlSerializer(serializers.ModelSerializer):
+    filename = serializers.CharField(write_only=True)
+    task_id = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = Attachment
+        fields = ("filename", "task_id")
+
+
+class AttachmentListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Attachment
+        fields = "__all__"
+
+
+class SearchSerializer(serializers.Serializer):
+    target = serializers.ChoiceField(choices=["task", "comment"], required=True)
+    query = serializers.CharField(required=True)

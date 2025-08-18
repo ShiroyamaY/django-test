@@ -1,5 +1,5 @@
 """
-URL configuration for tms project.
+URL configuration for config project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/4.2/topics/http/urls/
@@ -24,7 +24,7 @@ from drf_spectacular.views import (
 
 urlpatterns = [
     path(
-        "api/v1/",
+        "api/",
         include(
             [
                 path("users/", include("apps.users.urls")),
@@ -43,5 +43,6 @@ urlpatterns = [
             ]
         ),
     ),
+    path("accounts/", include("allauth.urls")),
     path("", include("apps.common.urls")),
 ]

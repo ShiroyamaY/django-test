@@ -9,6 +9,9 @@ echo "Running database migrations..."
 python manage.py makemigrations
 python manage.py migrate
 
+echo "Set elastic search indexes"
+python manage.py search_index --rebuild -f
+
 echo "Starting Gunicorn..."
 
 : "${GUNICORN_WORKERS:=10}"

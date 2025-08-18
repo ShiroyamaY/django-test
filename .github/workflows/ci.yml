@@ -37,6 +37,7 @@ jobs:
     env:
       SECRET_KEY: django-insecure-3%5#q8(62u&bq#%802%jwqa72gsg_7g&+8$uh32g@w$2!0x)z#
       DEBUG: "True"
+      TESTING: "True"
       DB_ENGINE: django.db.backends.postgresql
       DB_HOST: localhost
       DB_PORT: 5432
@@ -72,6 +73,14 @@ jobs:
         run: |
           uv run --project . ruff check .
 
+      - name: Run makemigrations
+        run: |
+          uv run python manage.py makemigrations      
+
       - name: Run tests
         run: |
-          uv run python manage.py test --settings=tms.settings
+          uv run python manage.py migrate      
+
+      - name: Run tests
+        run: |
+          uv run python manage.py test

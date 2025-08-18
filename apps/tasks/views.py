@@ -233,7 +233,6 @@ class AttachmentView(MultiSerializerMixin, ListModelMixin, GenericViewSet):
             object_name = str(uuid.uuid4())
 
             attachment = Attachment.objects.create(
-                bucket=MINIO_ATTACHMENTS_BUCKET,
                 object_name=object_name,
                 status=Attachment.Status.PENDING,
                 task_id=data["task_id"],
@@ -268,8 +267,13 @@ class AttachmentsWebhookView(APIView):
         except (KeyError, IndexError):
             return Response({"error": "Invalid payload"}, status=status.HTTP_400_BAD_REQUEST)
 
-        updated = Attachment.objects.filter(object_name=object_key).update(status=Attachment.Status.UPLOADED)
-        if updated == 0:
+        try:
+            attachment = Attachment.objects.get(object_name=object_key)
+        except Attachment.DoesNotExist:
             return Response({"error": "Attachment not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        attachment.file.name = object_key
+        attachment.status = Attachment.Status.UPLOADED
+        attachment.save()
 
         return Response({"message": "ok"})

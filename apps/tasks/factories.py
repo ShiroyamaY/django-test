@@ -39,6 +39,4 @@ class AttachmentFactory(DjangoModelFactory):
     task = factory.SubFactory(TaskFactory)
     filename = factory.Faker("file_name")
     status = Attachment.Status.PENDING
-    bucket = "test-bucket"
-    content_type = "text/plain"
     object_name = factory.Faker("uuid4")

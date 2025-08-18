@@ -3,8 +3,10 @@ from datetime import datetime
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import TextChoices
+from django_minio_backend import MinioBackend
 
 from apps.common.models import TimeStampMixin
+from config.settings import MINIO_ATTACHMENTS_BUCKET
 
 
 class Task(TimeStampMixin, models.Model):
@@ -72,6 +74,5 @@ class Attachment(TimeStampMixin, models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="attachments")
     filename = models.CharField(max_length=100, blank=True, null=True)
     status = models.CharField(choices=Status.choices, default=Status.PENDING, max_length=20)
-    bucket = models.CharField(max_length=255, blank=True, null=True)
-    content_type = models.CharField(max_length=255, blank=True, null=True)
+    file = models.FileField(storage=MinioBackend(bucket_name=MINIO_ATTACHMENTS_BUCKET), blank=True, null=True)
     object_name = models.CharField(max_length=255)
